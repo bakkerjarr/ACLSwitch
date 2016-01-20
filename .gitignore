@@ -1,2 +1,4 @@
 # Ignore these files
 *.pyc
+*.log
+*.idea
