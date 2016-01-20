@@ -8,10 +8,11 @@
 #
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or
+# implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-##########################################################################
+#########################################################################
 # Author: Jarrod N. Bakker
 #
 # ACLSwitch was originally developed as part of an ENGR489 project at
@@ -22,7 +23,7 @@
 #
 # The original license for simple_switch_13.py can be found below.
 #
-####################################################################
+#########################################################################
 # Copyright (C) 2011 Nippon Telegraph and Telephone Corporation.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -37,7 +38,7 @@
 # implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-#####################################################################
+#########################################################################
 
 # Modules
 # Ryu and OpenFlow protocol
@@ -76,7 +77,8 @@ class ACLSwitch(app_manager.RyuApp):
     ACL_ENTRY = namedtuple("ACL_ENTRY",
                            "ip_src ip_dst tp_proto port_src "
                            "port_dst policy time_start time_duration")
-    CONFIG_FILENAME = "/home/ubuntu/ACLSwitch/Ryu_Application/config.json"
+    CONFIG_FILENAME = "/home/ubuntu/ACLSwitch/Ryu_Application/config" \
+                      ".json"
 
     OFP_VERSIONS = [ofproto_v1_3.OFP_VERSION]
     OFP_MAX_PRIORITY = ofproto_v1_3.OFP_DEFAULT_PRIORITY * 2 - 1
@@ -208,7 +210,8 @@ class ACLSwitch(app_manager.RyuApp):
                                            "port_dst": rule.port_dst,
                                            "policy": rule.policy,
                                            "time_start": rule.time_start,
-                                           "time_duration": rule.time_duration}
+                                           "time_duration":
+                                               rule.time_duration}
         return acl_formatted
 
     """
@@ -478,7 +481,8 @@ class ACLSwitch(app_manager.RyuApp):
     @param policy - the policy the rule should be associated with.
     @param time_start - when the rule should start being enforced.
     @param time_duration - how long the rule should be enforced for.
-    @return - a tuple indicating if the operation was a success, a message
+    @return - a tuple indicating if the operation was a success,
+    a message.
               to be returned to the client and the new created rule. This
               is useful in the case where a single rule has been created
               and needs to be distributed among switches.
@@ -535,7 +539,8 @@ class ACLSwitch(app_manager.RyuApp):
         rule = self._access_control_list[rule_id]
         del self._access_control_list[rule_id]
         self._policy_to_rules[rule.policy].remove(rule_id)
-        # The rule had time enforcement, it must be removed from the queue
+        # The rule had time enforcement, it must be removed from the
+        # queue.
         if rule.time_start != "N/A":
             self._remove_from_queue(rule_id)
 
@@ -585,15 +590,10 @@ class ACLSwitch(app_manager.RyuApp):
             "%H:%M")
 
         # Check if the queue head needs to be pre-empted
-        if ((
-                        cur_time < queue_head_time and new_rule_time < queue_head_time
-            and new_rule_time > cur_time) or
-                (
-                            cur_time > queue_head_time and cur_time < new_rule_time and
-                        new_rule_time > cur_time) or
-                (
-                            new_rule_time < queue_head_time and cur_time > new_rule_time and
-                        queue_head_time < cur_time)):
+        if ((cur_time < queue_head_time and cur_time < new_rule_time <
+            queue_head_time) or (queue_head_time < cur_time <
+            new_rule_time) or (new_rule_time < queue_head_time < cur_time
+            and new_rule_time < cur_time)):
             self._rule_time_queue.insert(0, [new_rule_id])
             hub.kill(self._gthread_rule_dist)
             self._gthread_rule_dist = hub.spawn(
@@ -622,11 +622,11 @@ class ACLSwitch(app_manager.RyuApp):
                 break
 
             if new_rule_time < cur_time and rule_i_time > new_rule_time:
-                # The new rule has a 'smaller' time value than the current
-                # time but its time for scheduling has already passed. This
-                # means that the rule should be scheduled for tomorrow. To
-                # correct the comparisons we'll add a day onto the datetime
-                # value.
+                # The new rule has a 'smaller' time value than the
+                # current time but its time for scheduling has already
+                # passed. This means that the rule should be scheduled
+                # for tomorrow. To correct the comparisons we'll add a
+                # day onto the datetime value.
                 new_rule_time = new_rule_time + dt.timedelta(1)
 
             if i == 0 and new_rule_time < rule_i_time:
@@ -643,7 +643,7 @@ class ACLSwitch(app_manager.RyuApp):
                 # may be scheduled for tomorrow.
                 rule_i1_time = rule_i1_time + dt.timedelta(1)
 
-            if rule_i_time < new_rule_time and new_rule_time < rule_i1_time:
+            if rule_i_time < new_rule_time < rule_i1_time:
                 self._rule_time_queue.insert(i + 1, [new_rule_id])
                 break
 
@@ -743,9 +743,9 @@ class ACLSwitch(app_manager.RyuApp):
             time_start = rule.time_start
             # Normalise next_time
             next_scheduled = dt.datetime.strptime(time_start, "%H:%M")
-            # The current time has to be normalised with the time in a rule
-            # (i.e. the date of each datetime object is the same) before a
-            # comparison can be made.
+            # The current time has to be normalised with the time in a
+            # rule (i.e. the date of each datetime object is the same)
+            # before a comparison can be made.
             current_time = dt.datetime.now().strftime("%H:%M:%S")
             normalised_current = dt.datetime.strptime(current_time,
                                                       "%H:%M:%S")
@@ -855,7 +855,8 @@ class ACLSwitch(app_manager.RyuApp):
         # buffer is used for this table-miss entry as matching flows
         # get passed onto the L2 switching flow table.
         match = parser.OFPMatch()
-        actions = None  # no action required for forwarding to another table
+        # No action required for forwarding to another table
+        actions = None
         self._add_flow(datapath, 0, match, actions,
                        table_id=self.TABLE_ID_ACL)
 
@@ -940,8 +941,8 @@ class ACLSwitch(app_manager.RyuApp):
             "[?] New flow: " + str(pkt)
             priority = ofproto_v1_3.OFP_DEFAULT_PRIORITY
 
-            # verify if we have a valid buffer_id, if yes avoid to send both
-            # flow_mod & packet_out
+            # verify if we have a valid buffer_id, if yes avoid to send
+            # both flow_mod & packet_out
             if msg.buffer_id != ofproto.OFP_NO_BUFFER:
                 self._add_flow(datapath, priority, match, actions,
                                msg.buffer_id)
