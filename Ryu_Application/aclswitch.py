@@ -105,17 +105,11 @@ class ACLSwitch(app_manager.RyuApp):
         self._rule_time_queue = []
         self._gthread_rule_dist = None
 
-        # Create the default polciy
+        # Create the default policy
         self.policy_create(self.POLICY_DEFAULT)
 
         # Import config from file
-        try:
-            self._import_from_file(self.CONFIG_FILENAME)
-            print("[!] Config loaded.")
-        except:
-            print("[-] ERROR: could not read from file \'"
-                  + str(self.CONFIG_FILENAME) + "\'")
-            print("[!] No config loaded.")
+        self._import_from_file(self.CONFIG_FILENAME)
 
         # Create an object for the REST interface
         wsgi = kwargs['wsgi']
@@ -131,33 +125,39 @@ class ACLSwitch(app_manager.RyuApp):
     """
 
     def _import_from_file(self, filename):
-        buf_in = open(filename)
-        print("[?] Reading from file \'" + str(filename) + "\'")
-        for line in buf_in:
-            if line[0] == "#" or not line.strip():
-                continue  # Skip file comments and empty lines
-            try:
-                config = json.loads(line)
-            except:
-                print("[-] Line: " + line + "is not valid JSON.")
-                continue
-            if "rule" in config:
-                rule = config["rule"]
-                self.acl_rule_add(rule["ip_src"], rule["ip_dst"],
-                                  rule["tp_proto"], rule["port_src"],
-                                  rule["port_dst"], rule["policy"])
-            elif "policy" in config:
-                self.policy_create(config["policy"])
-            elif "rule_time" in config:
-                rule = config["rule_time"]
-                self.acl_rule_add(rule["ip_src"], rule["ip_dst"],
-                                  rule["tp_proto"], rule["port_src"],
-                                  rule["port_dst"], rule["policy"],
-                                  rule["time_start"],
-                                  rule["time_duration"])
-            else:
-                print("[-] Line: " + line + "is not recognised JSON.")
-        buf_in.close()
+        try:
+            buf_in = open(filename)
+            print("[?] Reading from file \'" + str(filename) + "\'")
+            for line in buf_in:
+                if line[0] == "#" or not line.strip():
+                    continue  # Skip file comments and empty lines
+                try:
+                    config = json.loads(line)
+                    print(config)
+                except ValueError:
+                    print("[-] Line: " + line + "is not valid JSON.")
+                    continue
+                if "rule" in config:
+                    rule = config["rule"]
+                    self.acl_rule_add(rule["ip_src"], rule["ip_dst"],
+                                      rule["tp_proto"], rule["port_src"],
+                                      rule["port_dst"], rule["policy"])
+                elif "policy" in config:
+                    self.policy_create(config["policy"])
+                elif "rule_time" in config:
+                    rule = config["rule_time"]
+                    self.acl_rule_add(rule["ip_src"], rule["ip_dst"],
+                                      rule["tp_proto"], rule["port_src"],
+                                      rule["port_dst"], rule["policy"],
+                                      rule["time_start"],
+                                      rule["time_duration"])
+                else:
+                    print("[-] Line: " + line + "is not recognised JSON.")
+            buf_in.close()
+        except IOError:
+            print("[-] ERROR: could not read from file \'" + str(
+                    self.CONFIG_FILENAME) + "\'")
+            print("[!] No config loaded.")
 
         # Methods used for fetching information on the current state of
         # ACLSwitch.
