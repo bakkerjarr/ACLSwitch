@@ -7,4 +7,4 @@
 #========================================================================
 clear ;
 # The paths below may need to edited, this should be changed!
-cd /home/ubuntu/ryu && ./bin/ryu-manager --verbose /home/ubuntu/ACLSwitch/Ryu_Application/aclswitch.py ;
+cd /home/ubuntu/ryu && ./bin/ryu-manager --verbose /home/ubuntu/ACLSwitch/Ryu_Application/ACLSwitch.py ;
