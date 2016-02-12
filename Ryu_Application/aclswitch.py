@@ -86,6 +86,8 @@ class ACLSwitch(app_manager.RyuApp):
 
     TABLE_ID_ACL = 0
     TABLE_ID_L2 = 1
+    TABLE_ID_BLACKLIST = 2
+    TABLE_ID_WHITELIST = 3
 
     TIME_PAUSE = 1  # In seconds
 
