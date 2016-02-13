@@ -49,7 +49,7 @@ class ACLInterfaceRule:
                             "  with ACLSwitch.")
     TEXT_HELP_RULE = "\tadd, remove OR time"
     TEXT_HELP_RULE_ADD = ("\tRule to add: ip_src ip_dst transport_protocol"
-                         " port_src port_dst policy")
+                         " port_src port_dst policy dst_table")
     TEXT_HELP_RULE_REMOVE = "\tRule to remove: rule_id"
     TEXT_HELP_RULE_TIME = ("\tRule to add: ip_src ip_dst transport_protocol"
                           " port_src port_dst policy time_start(e.g. 13:45)"
@@ -87,7 +87,7 @@ class ACLInterfaceRule:
     @param policy - policy to be encoded
     @return - JSON representation of the rule
     """
-    def rule_to_json(self, ip_src, ip_dst, tp_proto, port_src, port_dst, policy):
+    def rule_to_json(self, ip_src, ip_dst, tp_proto, port_src, port_dst, policy, dst_list):
        rule_dict = {}
        rule_dict["ip_src"] = ip_src
        rule_dict["ip_dst"] = ip_dst
@@ -95,6 +95,7 @@ class ACLInterfaceRule:
        rule_dict["port_src"] = port_src
        rule_dict["port_dst"] = port_dst
        rule_dict["policy"] = policy
+       rule_dict["dst_list"] = dst_list
        return json.dumps(rule_dict)
 
     """
@@ -105,8 +106,8 @@ class ACLInterfaceRule:
         print self.TEXT_HELP_RULE_ADD
         buf_in = raw_input(self.PROMPT_RULE_ADD)
         items = buf_in.split(" ")
-        if len(items) != 6:
-            print "Expected 6 arguments, " + str(len(items)) + " given."
+        if len(items) != 7:
+            print "Expected 7 arguments, " + str(len(items)) + " given."
             return
         items[2] = items[2].lower()
         errors = rule_syntax.check_rule(items[0], items[1], items[2],
@@ -117,10 +118,11 @@ class ACLInterfaceRule:
                 print "\t" + e
             return
         add_req = self.rule_to_json(items[0], items[1], items[2],
-                                    items[3], items[4], items[5])
+                                    items[3], items[4], items[5], items[6])
         try:
             resp = requests.post(self.URL_ACLSWITCH_RULE, data=add_req,
                                 headers = {"Content-type": "application/json"})
+            print("adding request" + add_req)
         except:
             print self.TEXT_ERROR_CONNECTION
             return

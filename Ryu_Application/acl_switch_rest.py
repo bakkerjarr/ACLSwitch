@@ -180,8 +180,11 @@ class ACLSwitchREST(ControllerBase):
     """
     @route("acl_switch", url+"/acl_rules", methods=["POST"])
     def acl_rule_add(self, req, **kwargs):
+        print(str(json.loads(req.body)))
+        print("Adding a new rule in the API")
         try:
             ruleReq = json.loads(req.body)
+
         except:
             return Response(status=400, body="Unable to parse JSON.")
         if not self.check_rule_json(ruleReq):
@@ -191,7 +194,8 @@ class ACLSwitchREST(ControllerBase):
                                                    ruleReq["tp_proto"],
                                                    ruleReq["port_src"],
                                                    ruleReq["port_dst"],
-                                                   ruleReq["policy"])
+                                                   ruleReq["policy"],
+                                                   ruleReq["dst_list"])
         if result[0] == False:
             return Response(status=400, body=result[1])
         return Response(status=200, body=result[1])
@@ -243,7 +247,7 @@ class ACLSwitchREST(ControllerBase):
     @return - True if ruleJSON is valid, False otherwise.
     """
     def check_rule_json(self, ruleJSON):
-        if len(ruleJSON) != 6:
+        if len(ruleJSON) != 7:
             return False
         if not "ip_src" in ruleJSON:
             return False
