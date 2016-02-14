@@ -238,7 +238,7 @@ class ACLSwitchREST(ControllerBase):
 						   ruleReq["port_src"],
 						   ruleReq["port_dst"],
 						   ruleReq["policy"],
-						   ruleReq["list"]
+						   ruleReq["list"])
 
         if result[0] == False:
             return Response(status=400, body=result[1])
