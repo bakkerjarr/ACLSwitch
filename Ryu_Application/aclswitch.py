@@ -216,8 +216,7 @@ class ACLSwitch(app_manager.RyuApp):
                                            "port_dst": rule.port_dst,
                                            "policy": rule.policy,
                                            "time_start": rule.time_start,
-                                           "time_duration": rule.time_duration
-					   "list": rule.list}
+                                           "time_duration": rule.time_duration}
         return acl_formatted
 
     """

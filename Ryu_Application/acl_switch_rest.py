@@ -224,7 +224,7 @@ class ACLSwitchREST(ControllerBase):
     API call to add a rule for the whitelist or blacklist to the ACL.
     """
 
-    @route("acl_switch", url+"/acl_rules/time", methods=["POST"])
+    @route("acl_switch", url+"/acl_rules/list", methods=["POST"])
     def acl_rule_add(self, req, **kwargs):
 	try:
             ruleReq = json.loads(req.body)
