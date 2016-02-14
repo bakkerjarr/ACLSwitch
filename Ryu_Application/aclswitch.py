@@ -84,10 +84,10 @@ class ACLSwitch(app_manager.RyuApp):
     # Note that for a priority p, 0 <= p <= MAX (i.e. 65535)
     POLICY_DEFAULT = "default"
 
-    TABLE_ID_ACL = 0
-    TABLE_ID_L2 = 1
-    TABLE_ID_BLACKLIST = 2
-    TABLE_ID_WHITELIST = 3
+    TABLE_ID_BLACKLIST = 0
+    TABLE_ID_WHITELIST = 1
+    TABLE_ID_ACL = 2
+    TABLE_ID_L2 = 3
 
     TIME_PAUSE = 1  # In seconds
 
@@ -155,6 +155,12 @@ class ACLSwitch(app_manager.RyuApp):
                                   rule["port_dst"], rule["policy"],
                                   rule["time_start"],
                                   rule["time_duration"])
+	    elif "list" in config:
+		rule = config["list"]
+		self.acl_rule_add(rule["ip_src"], rule["ip_dst"],
+                                  rule["tp_proto"], rule["port_src"],
+                                  rule["port_dst"], rule["policy"],
+                                  rule["list"])
             else:
                 print("[-] Line: " + line + "is not recognised JSON.")
         buf_in.close()
@@ -210,7 +216,8 @@ class ACLSwitch(app_manager.RyuApp):
                                            "port_dst": rule.port_dst,
                                            "policy": rule.policy,
                                            "time_start": rule.time_start,
-                                           "time_duration": rule.time_duration}
+                                           "time_duration": rule.time_duration
+					   "list": rule.list}
         return acl_formatted
 
     """
@@ -480,6 +487,7 @@ class ACLSwitch(app_manager.RyuApp):
     @param policy - the policy the rule should be associated with.
     @param time_start - when the rule should start being enforced.
     @param time_duration - how long the rule should be enforced for.
+    @param list - whether this rule is for the blacklist or whitelist
     @return - a tuple indicating if the operation was a success, a message
               to be returned to the client and the new created rule. This
               is useful in the case where a single rule has been created
@@ -487,7 +495,7 @@ class ACLSwitch(app_manager.RyuApp):
     """
 
     def acl_rule_add(self, ip_src, ip_dst, tp_proto, port_src, port_dst,
-                     policy, time_start="N/A", time_duration="N/A"):
+                     policy, time_start="N/A", time_duration="N/A", list="N/A"):
         syntax_results = self._acl_rule_syntax_check(ip_src, ip_dst,
                                                      tp_proto, port_src,
                                                      port_dst)
@@ -505,7 +513,8 @@ class ACLSwitch(app_manager.RyuApp):
                                   tp_proto=tp_proto, port_src=port_src,
                                   port_dst=port_dst, policy=policy,
                                   time_start=time_start,
-                                  time_duration=time_duration)
+                                  time_duration=time_duration,
+				  list=list)
         for rule in self._access_control_list.values():
             if self._compare_acl_rules(new_rule, rule):
                 return (False, "New rule was not created, it already "
