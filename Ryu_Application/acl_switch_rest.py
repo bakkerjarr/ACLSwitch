@@ -221,10 +221,10 @@ class ACLSwitchREST(ControllerBase):
 
 
     """
-    API call to add a rule for the whitelist or blacklist to the ACL.
+    API call to add a rule for the blacklist to the ACL.
     """
 
-    @route("acl_switch", url+"/acl_rules/list", methods=["POST"])
+    @route("acl_switch", url+"/acl_rules/blacklist", methods=["POST"])
     def acl_rule_add(self, req, **kwargs):
 	try:
             ruleReq = json.loads(req.body)
@@ -238,7 +238,7 @@ class ACLSwitchREST(ControllerBase):
 						   ruleReq["port_src"],
 						   ruleReq["port_dst"],
 						   ruleReq["policy"],
-						   ruleReq["list"])
+						   ruleReq["blacklist"])
 
         if result[0] == False:
             return Response(status=400, body=result[1])

@@ -155,13 +155,21 @@ class ACLSwitch(app_manager.RyuApp):
                                   rule["port_dst"], rule["policy"],
                                   rule["time_start"],
                                   rule["time_duration"])
-	    elif "list" in config:
-		rule = config["list"]
+	    elif "blacklist" in config:
+		rule = config["blacklist"]
 		self.acl_rule_add(rule["ip_src"], rule["ip_dst"],
                                   rule["tp_proto"], rule["port_src"],
                                   rule["port_dst"], rule["policy"],
-                                  rule["list"])
-            else:
+                                  rule["blacklist"])
+       	        print("Blacklist is called oooooooooooooooooooooooooo")
+            elif "whitelist" in config:
+		rule = config["whitelist"]
+		self.acl_rule_add(rule["ip_src"], rule["ip_dst"],
+                                  rule["tp_proto"], rule["port_src"],
+                                  rule["port_dst"], rule["policy"],
+				  rule["whitelist"])
+	        print("Whitelist is called ^^^^^^^^^^^^^^^^^^^^^^^^^^")
+	    else:
                 print("[-] Line: " + line + "is not recognised JSON.")
         buf_in.close()
 
