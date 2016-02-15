@@ -6,4 +6,4 @@
 #usage          :bash start_cli.sh
 #========================================================================
 clear ;
-python3 ./Command_Line_Interface/acli_main.py ;
+python ./Command_Line_Interface/interface_main.py ;
