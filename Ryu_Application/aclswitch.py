@@ -54,7 +54,7 @@ from ryu.lib.packet import packet
 from ryu.lib.packet import tcp
 
 # ACLSwitch modules
-from ACLSwitchLogging import ACLSwitchLogging
+from aclswitch_logging import ACLSwitchLogging
 
 __author__ = "Jarrod N. Bakker"
 __status__ = "Development"
