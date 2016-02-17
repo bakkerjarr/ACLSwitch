@@ -105,10 +105,9 @@ class ACLInterfaceRule:
         print self.TEXT_HELP_RULE_ADD
         buf_in = raw_input(self.PROMPT_RULE_ADD)
         items = buf_in.split(" ")
-	if len(items) != 7:
-            if len(items) != 6:
-                print "Expected 6 arguments, " + str(len(items)) + " given."
-                return
+        if len(items) != 6:
+            print "Expected 6 arguments, " + str(len(items)) + " given."
+            return
         items[2] = items[2].lower()
         errors = rule_syntax.check_rule(items[0], items[1], items[2],
                                         items[3], items[4])
