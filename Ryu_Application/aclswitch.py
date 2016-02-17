@@ -84,8 +84,9 @@ class ACLSwitch(app_manager.RyuApp):
     # Note that for a priority p, 0 <= p <= MAX (i.e. 65535)
     POLICY_DEFAULT = "default"
 
-    TABLE_ID_ACL = 0
-    TABLE_ID_L2 = 1
+    TABLE_ID_BLACKLIST = 0
+    TABLE_ID_WHITELIST = 1
+    TABLE_ID_L2 = 2
 
     TIME_PAUSE = 1  # In seconds
 
@@ -144,8 +145,15 @@ class ACLSwitch(app_manager.RyuApp):
                 self.acl_rule_add(rule["ip_src"], rule["ip_dst"],
                                   rule["tp_proto"], rule["port_src"],
                                   rule["port_dst"], rule["policy"])
+                print("in standard rule")
+		if(rule["rule_list"]=="whitelist"):
+		    print("in whitelist")
+		else:
+		    print("in blacklist")
+	
             elif "policy" in config:
                 self.policy_create(config["policy"])
+	 	print("policy called")
             elif "rule_time" in config:
                 rule = config["rule_time"]
                 self.acl_rule_add(rule["ip_src"], rule["ip_dst"],
@@ -153,7 +161,22 @@ class ACLSwitch(app_manager.RyuApp):
                                   rule["port_dst"], rule["policy"],
                                   rule["time_start"],
                                   rule["time_duration"])
-            else:
+	
+	    elif "blacklist" in config:
+		rule = config["blacklist"]
+		self.acl_rule_add(rule["ip_src"], rule["ip_dst"],
+                                  rule["tp_proto"], rule["port_src"],
+                                  rule["port_dst"], rule["policy"],
+                                  blacklist = rule["blacklist"])
+       	        print("Blacklist is called oooooooooooooooooooooooooo")
+            elif "whitelist" in config:
+		rule = config["whitelist"]
+		self.acl_rule_add(rule["ip_src"], rule["ip_dst"],
+                                  rule["tp_proto"], rule["port_src"],
+                                  rule["port_dst"], rule["policy"],
+				  whitelist = rule["whitelist"])
+	        print("Whitelist is called ^^^^^^^^^^^^^^^^^^^^^^^^^^")
+	    else:
                 print("[-] Line: " + line + "is not recognised JSON.")
         buf_in.close()
 
@@ -478,6 +501,7 @@ class ACLSwitch(app_manager.RyuApp):
     @param policy - the policy the rule should be associated with.
     @param time_start - when the rule should start being enforced.
     @param time_duration - how long the rule should be enforced for.
+    @param list - whether this rule is for the blacklist or whitelist
     @return - a tuple indicating if the operation was a success, a message
               to be returned to the client and the new created rule. This
               is useful in the case where a single rule has been created
@@ -485,7 +509,7 @@ class ACLSwitch(app_manager.RyuApp):
     """
 
     def acl_rule_add(self, ip_src, ip_dst, tp_proto, port_src, port_dst,
-                     policy, time_start="N/A", time_duration="N/A"):
+                     policy, time_start="N/A", time_duration="N/A", blacklist="N/A", whitelist="N/A"):
         syntax_results = self._acl_rule_syntax_check(ip_src, ip_dst,
                                                      tp_proto, port_src,
                                                      port_dst)
@@ -504,6 +528,7 @@ class ACLSwitch(app_manager.RyuApp):
                                   port_dst=port_dst, policy=policy,
                                   time_start=time_start,
                                   time_duration=time_duration)
+
         for rule in self._access_control_list.values():
             if self._compare_acl_rules(new_rule, rule):
                 return (False, "New rule was not created, it already "
@@ -696,11 +721,11 @@ class ACLSwitch(app_manager.RyuApp):
             match = self._create_match(rule)
             if rule.time_duration == "N/A":
                 self._add_flow(datapath, priority, match, actions,
-                               table_id=self.TABLE_ID_ACL)
+                               table_id=self.TABLE_ID_BLACKLIST)
             else:
                 self._add_flow(datapath, priority, match, actions,
                                time_limit=(int(rule.time_duration)),
-                               table_id=self.TABLE_ID_ACL)
+                               table_id=self.TABLE_ID_BLACKLIST)
 
     """
     Proactively distribute hardcoded firewall rules to the switch
@@ -721,7 +746,7 @@ class ACLSwitch(app_manager.RyuApp):
                 actions = []
                 match = self._create_match(rule)
                 self._add_flow(datapath, priority, match, actions,
-                               table_id=self.TABLE_ID_ACL)
+                               table_id=self.TABLE_ID_BLACKLIST)
 
     """
     Distribute rules to switches when their time arises. An alarm must
@@ -817,9 +842,13 @@ class ACLSwitch(app_manager.RyuApp):
         ofproto = datapath.ofproto
         parser = datapath.ofproto_parser
 
-        if (actions == None):
+        if (actions == "fwd_to_table_whitelist"):
             # catch the moment where the flow tables are being linked up
+            inst = [parser.OFPInstructionGotoTable(self.TABLE_ID_WHITELIST)]
+	elif (actions == "fwd_to_table_L2"):
             inst = [parser.OFPInstructionGotoTable(self.TABLE_ID_L2)]
+ 
+
         else:
             inst = [
                 parser.OFPInstructionActions(ofproto.OFPIT_APPLY_ACTIONS,
@@ -851,13 +880,21 @@ class ACLSwitch(app_manager.RyuApp):
         ofproto = datapath.ofproto
         parser = datapath.ofproto_parser
 
-        # Install table-miss flow entry for the ACL flow table. No
+        # Install table-miss flow entry for the blacklist flow table. No
         # buffer is used for this table-miss entry as matching flows
-        # get passed onto the L2 switching flow table.
+        # get passed onto the whitelist switching flow table.
         match = parser.OFPMatch()
-        actions = None  # no action required for forwarding to another table
+        actions = "fwd_to_table_whitelist"  # no action required for forwarding to another table
         self._add_flow(datapath, 0, match, actions,
-                       table_id=self.TABLE_ID_ACL)
+                       table_id=self.TABLE_ID_BLACKLIST)
+
+        # Install table-miss flow entry for the whitelist flow table. No
+        # buffer is used for this table-miss entry as matching flows
+        # will be dropped.
+        match = parser.OFPMatch()
+        actions = []  # no action required for forwarding to another table
+        self._add_flow(datapath, 0, match, actions,
+                       table_id=self.TABLE_ID_WHITELIST)
 
         # Install table-miss flow entry for the L2 switching flow table.
         #
@@ -869,7 +906,7 @@ class ACLSwitch(app_manager.RyuApp):
         match = parser.OFPMatch()
         actions = [parser.OFPActionOutput(ofproto.OFPP_CONTROLLER,
                                           ofproto.OFPCML_NO_BUFFER)]
-        self._add_flow(datapath, 0, match, actions)
+        self._add_flow(datapath, 0, match, actions, table_id = self.TABLE_ID_L2)
 
         # The code below has been added by Jarrod N. Bakker
         # Take note of switches (via their datapaths)
