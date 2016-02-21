@@ -150,6 +150,7 @@ class ACLSwitch(app_manager.RyuApp):
                 print("Found a whitelist rule")
                 rule = config["list"]
                 if (rule["rule_list"] == "whitelist"):
+                    print("Adding a whitelist rule")
                     self.acl_rule_add(rule["ip_src"], rule["ip_dst"],
                                     rule["tp_proto"], rule["port_src"],
                                     rule["port_dst"], rule["policy"],
@@ -159,15 +160,15 @@ class ACLSwitch(app_manager.RyuApp):
                                   rule["tp_proto"], rule["port_src"],
                                   rule["port_dst"], rule["policy"],
                                   dst_list=self.TABLE_ID_BLACKLIST)
-
             elif "policy" in config:
                 self.policy_create(config["policy"])
             elif "rule_time" in config:
+                print("found a rule time")
                 rule = config["rule_time"]
                 self.acl_rule_add(rule["ip_src"], rule["ip_dst"],
                                   rule["tp_proto"], rule["port_src"],
                                   rule["port_dst"], rule["policy"],
-                                  TABLE_ID_BLACKLIST,
+                                  self.TABLE_ID_BLACKLIST,
                                   rule["time_start"],
                                   rule["time_duration"])
             else:
@@ -505,7 +506,6 @@ class ACLSwitch(app_manager.RyuApp):
 
     def acl_rule_add(self, ip_src, ip_dst, tp_proto, port_src, port_dst,
                      policy, dst_list=TABLE_ID_BLACKLIST, time_start="N/A", time_duration="N/A"):
-        print("adding rule in controller with ip_src" + str(ip_src))
         syntax_results = self._acl_rule_syntax_check(ip_src, ip_dst,
                                                      tp_proto, port_src,
                                                      port_dst)
@@ -707,8 +707,7 @@ class ACLSwitch(app_manager.RyuApp):
     """
 
     def _distribute_single_rule(self, rule):
-        print("Trying to distrubute a single rule" + str(rule))# rule is coming through here OK
-        print("Rule IP source is: " + rule.ip_src)
+
         for switch in self._connected_switches:
             switch_policies = self._connected_switches[switch]
             if rule.policy not in switch_policies:
@@ -844,7 +843,7 @@ class ACLSwitch(app_manager.RyuApp):
 
         if (table_id == self.TABLE_ID_WHITELIST):
             actions = None
-	    print("Here is the match in addflow /n ============" + str(match))
+
             inst = [parser.OFPInstructionGotoTable(self.TABLE_ID_L2)]
 
         else:
@@ -865,7 +864,7 @@ class ACLSwitch(app_manager.RyuApp):
                                     priority=priority, match=match,
                                     flags=ofproto.OFPFF_SEND_FLOW_REM,
                                     instructions=inst, table_id=table_id)
-        print("actions are: " + str(actions))
+
         datapath.send_msg(mod)
 
     # Methods handling OpenFlow events
@@ -1001,7 +1000,6 @@ class ACLSwitch(app_manager.RyuApp):
         if out_port != ofproto.OFPP_FLOOD:
             match = parser.OFPMatch(in_port=in_port, eth_dst=eth_dst)
 
-            print
             "[?] New flow: " + str(pkt)
             priority = ofproto_v1_3.OFP_DEFAULT_PRIORITY
 
