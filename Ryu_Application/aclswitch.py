@@ -145,7 +145,7 @@ class ACLSwitch(app_manager.RyuApp):
                 self.acl_rule_add(rule["ip_src"], rule["ip_dst"],
                                   rule["tp_proto"], rule["port_src"],
                                   rule["port_dst"], rule["policy"],
-                                  TABLE_ID_BLACKLIST)
+                                  dst_list=self.TABLE_ID_BLACKLIST)
             elif "list" in config:
                 print("Found a whitelist rule")
                 rule = config["list"]
@@ -153,12 +153,12 @@ class ACLSwitch(app_manager.RyuApp):
                     self.acl_rule_add(rule["ip_src"], rule["ip_dst"],
                                     rule["tp_proto"], rule["port_src"],
                                     rule["port_dst"], rule["policy"],
-                                    TABLE_ID_WHITELIST)
+                                    dst_list = self.TABLE_ID_WHITELIST)
                 else:
                     self.acl_rule_add(rule["ip_src"], rule["ip_dst"],
                                   rule["tp_proto"], rule["port_src"],
                                   rule["port_dst"], rule["policy"],
-                                  TABLE_ID_BLACKLIST)
+                                  dst_list=self.TABLE_ID_BLACKLIST)
 
             elif "policy" in config:
                 self.policy_create(config["policy"])
