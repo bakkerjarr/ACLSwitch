@@ -50,6 +50,7 @@ from ryu.ofproto import ofproto_v1_3
 from ryu.ofproto import ofproto_v1_3_parser as ofp13_parser
 # Packets
 from ryu.lib.packet import ethernet
+from ryu.lib.packet import arp
 from ryu.lib.packet import ipv4
 from ryu.lib.packet import ipv6
 from ryu.lib.packet import packet
@@ -927,7 +928,9 @@ class ACLSwitch(app_manager.RyuApp):
         datapath.send_msg(mod)
         #flow rule to let through the ARP packets!
         inst = [parser.OFPInstructionGotoTable(self.TABLE_ID_L2)]
-        match = parser.OFPMatch(arp_op=3, eth_type=2054)
+
+        match = parser.OFPMatch(arp_op=arp.ARP_REQUEST, eth_type=ethernet.ether.ETH_TYPE_ARP)
+
         mod = parser.OFPFlowMod(datapath=datapath,
                                     hard_timeout=0,
                                     priority=0, match=match,
