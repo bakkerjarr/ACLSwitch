@@ -874,6 +874,25 @@ class ACLSwitch(app_manager.RyuApp):
 
     def _configure_initial_flow(self, datapath, ofproto, parser):
         print("Configuring initial flows")
+
+         #flow rule to let through the ARP packets!
+        inst = [parser.OFPInstructionGotoTable(self.TABLE_ID_L2)]
+        match = parser.OFPMatch(arp_op=arp.ARP_REQUEST, eth_type=ethernet.ether.ETH_TYPE_ARP)
+        mod = parser.OFPFlowMod(datapath=datapath,
+                                    hard_timeout=0,
+                                    priority=0, match=match,
+                                    flags=ofproto.OFPFF_SEND_FLOW_REM,
+                                    instructions=inst, table_id=self.TABLE_ID_WHITELIST)
+        datapath.send_msg(mod)
+
+        inst = [parser.OFPInstructionGotoTable(self.TABLE_ID_L2)]
+        match = parser.OFPMatch(arp_op=arp.ARP_REPLY, eth_type=ethernet.ether.ETH_TYPE_ARP)
+        mod = parser.OFPFlowMod(datapath=datapath,
+                                    hard_timeout=0,
+                                    priority=0, match=match,
+                                    flags=ofproto.OFPFF_SEND_FLOW_REM,
+                                    instructions=inst, table_id=self.TABLE_ID_WHITELIST)
+        datapath.send_msg(mod)
         # Install table-miss flow entry for the blacklist flow table. No
         # buffer is used for this table-miss entry as matching flows
         # get passed onto the whitelist switching flow table.
@@ -924,24 +943,7 @@ class ACLSwitch(app_manager.RyuApp):
                                     flags=ofproto.OFPFF_SEND_FLOW_REM,
                                     instructions=inst, table_id=self.TABLE_ID_L2)
         datapath.send_msg(mod)
-        #flow rule to let through the ARP packets!
-        inst = [parser.OFPInstructionGotoTable(self.TABLE_ID_L2)]
-        match = parser.OFPMatch(arp_op=arp.ARP_REQUEST, eth_type=ethernet.ether.ETH_TYPE_ARP)
-        mod = parser.OFPFlowMod(datapath=datapath,
-                                    hard_timeout=0,
-                                    priority=0, match=match,
-                                    flags=ofproto.OFPFF_SEND_FLOW_REM,
-                                    instructions=inst, table_id=self.TABLE_ID_WHITELIST)
-        datapath.send_msg(mod)
 
-        inst = [parser.OFPInstructionGotoTable(self.TABLE_ID_L2)]
-        match = parser.OFPMatch(arp_op=arp.ARP_REPLY, eth_type=ethernet.ether.ETH_TYPE_ARP)
-        mod = parser.OFPFlowMod(datapath=datapath,
-                                    hard_timeout=0,
-                                    priority=0, match=match,
-                                    flags=ofproto.OFPFF_SEND_FLOW_REM,
-                                    instructions=inst, table_id=self.TABLE_ID_WHITELIST)
-        datapath.send_msg(mod)
 
     @set_ev_cls(ofp_event.EventOFPSwitchFeatures, CONFIG_DISPATCHER)
     def _switch_features_handler(self, ev):
