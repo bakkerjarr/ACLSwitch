@@ -722,7 +722,7 @@ class ACLSwitch(app_manager.RyuApp):
             else:
                 self._add_flow(datapath, priority, match, actions,
                                time_limit=(int(rule.time_duration)),
-                               table_id=self.TABLE_ID_BLACKLIST)
+                               table_id=rule.dst_list)
 
     """
     Proactively distribute hardcoded firewall rules to the switch
@@ -743,7 +743,7 @@ class ACLSwitch(app_manager.RyuApp):
                 actions = []
                 match = self._create_match(rule)
                 self._add_flow(datapath, priority, match, actions,
-                               table_id=self.TABLE_ID_BLACKLIST)
+                               table_id=rule.dst_list)
 
     """
     Distribute rules to switches when their time arises. An alarm must
@@ -924,6 +924,15 @@ class ACLSwitch(app_manager.RyuApp):
                                     priority=0, match=match,
                                     flags=ofproto.OFPFF_SEND_FLOW_REM,
                                     instructions=inst, table_id=self.TABLE_ID_L2)
+        datapath.send_msg(mod)
+        #flow rule to let through the ARP packets!
+        inst = [parser.OFPInstructionGotoTable(self.TABLE_ID_L2)]
+        match = parser.OFPMatch(arp_op=3, eth_type=2054)
+        mod = parser.OFPFlowMod(datapath=datapath,
+                                    hard_timeout=0,
+                                    priority=0, match=match,
+                                    flags=ofproto.OFPFF_SEND_FLOW_REM,
+                                    instructions=inst, table_id=self.TABLE_ID_WHITELIST)
         datapath.send_msg(mod)
 
     @set_ev_cls(ofp_event.EventOFPSwitchFeatures, CONFIG_DISPATCHER)
