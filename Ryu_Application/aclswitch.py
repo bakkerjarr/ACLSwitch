@@ -844,11 +844,9 @@ class ACLSwitch(app_manager.RyuApp):
 
         if (table_id == self.TABLE_ID_WHITELIST):
             actions = None
-
             inst = [parser.OFPInstructionGotoTable(self.TABLE_ID_L2)]
 
         else:
-            actions = []
             inst = [parser.OFPInstructionActions(ofproto.OFPIT_APPLY_ACTIONS,
                                              actions)]
 
@@ -928,9 +926,16 @@ class ACLSwitch(app_manager.RyuApp):
         datapath.send_msg(mod)
         #flow rule to let through the ARP packets!
         inst = [parser.OFPInstructionGotoTable(self.TABLE_ID_L2)]
-
         match = parser.OFPMatch(arp_op=arp.ARP_REQUEST, eth_type=ethernet.ether.ETH_TYPE_ARP)
+        mod = parser.OFPFlowMod(datapath=datapath,
+                                    hard_timeout=0,
+                                    priority=0, match=match,
+                                    flags=ofproto.OFPFF_SEND_FLOW_REM,
+                                    instructions=inst, table_id=self.TABLE_ID_WHITELIST)
+        datapath.send_msg(mod)
 
+        inst = [parser.OFPInstructionGotoTable(self.TABLE_ID_L2)]
+        match = parser.OFPMatch(arp_op=arp.ARP_REPLY, eth_type=ethernet.ether.ETH_TYPE_ARP)
         mod = parser.OFPFlowMod(datapath=datapath,
                                     hard_timeout=0,
                                     priority=0, match=match,
