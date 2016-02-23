@@ -376,6 +376,63 @@ class ACLSwitch(app_manager.RyuApp):
         else:
             return IPAddress(ip_dst).version
 
+
+    """
+    Create a reversed OFPMatch instance based on the contents of an ACL_ENTRY.
+    This is for the whitelist -- we need to create a corresponding reversed flow.
+    @param rule - the entry to create an OFPMatch instance from
+    @return - the OFPMatch instance
+    """
+    def _create_reversed_match(self, rule):
+        print("Creating a reversed match")
+        match = ofproto_v1_3.OFPMatch()
+        ip_version = self._return_ip_version(rule.ip_src, rule.ip_dst)
+        if ip_version == 4:
+            # Match IPv4
+            match.append_field(ofproto_v1_3.OXM_OF_ETH_TYPE,
+                               ethernet.ether.ETH_TYPE_IP)
+            if rule.ip_dst != "*":
+                match.append_field(ofproto_v1_3.OXM_OF_IPV4_SRC,
+                                   int(IPAddress(rule.ip_src)))
+            if rule.ip_src != "*":
+                match.append_field(ofproto_v1_3.OXM_OF_IPV4_DST,
+                                   int(IPAddress(rule.ip_dst)))
+        else:
+            # Match IPv6
+            match.append_field(ofproto_v1_3.OXM_OF_ETH_TYPE,
+                               ethernet.ether.ETH_TYPE_IPV6)
+            if rule.ip_dst != "*":
+                match.append_field(ofproto_v1_3.OXM_OF_IPV6_SRC,
+                                   IPAddress(rule.ip_src).words)
+            if rule.ip_src != "*":
+                match.append_field(ofproto_v1_3.OXM_OF_IPV6_DST,
+                                   IPAddress(rule.ip_dst).words)
+
+        # Match transport layer (layer 4)
+        if rule.tp_proto != "*":
+            if rule.tp_proto == "tcp":
+                # Match TCP
+                match.append_field(ofproto_v1_3.OXM_OF_IP_PROTO,
+                                   ipv4.inet.IPPROTO_TCP)  # covers IPv6
+                if rule.port_dst != "*":
+                    match.append_field(ofproto_v1_3.OXM_OF_TCP_SRC,
+                                       int(rule.port_src))
+                if rule.port_src != "*":
+                    match.append_field(ofproto_v1_3.OXM_OF_TCP_DST,
+                                       int(rule.port_dst))
+            elif rule.tp_proto == "udp":
+                # Match UDP
+                match.append_field(ofproto_v1_3.OXM_OF_IP_PROTO,
+                                   ipv4.inet.IPPROTO_UDP)  # covers IPv6
+                if rule.port_dst != "*":
+                    match.append_field(ofproto_v1_3.OXM_OF_UDP_SRC,
+                                       int(rule.port_src))
+                if rule.port_src != "*":
+                    match.append_field(ofproto_v1_3.OXM_OF_UDP_DST,
+                                       int(rule.port_dst))
+        print ("match is: " + str(match))
+        return match
+
     """
     Create an OFPMatch instance based on the contents of an ACL_ENTRY.
 
@@ -720,10 +777,15 @@ class ACLSwitch(app_manager.RyuApp):
             if rule.time_duration == "N/A":
                 self._add_flow(datapath, priority, match, actions,
                                table_id=rule.dst_list)
+                if(rule.dst_list==self.TABLE_ID_WHITELIST):
+                    self._add_flow(datapath, priority,
+                                   match=self._create_reversed_match(self, rule),
+                                   table_id=rule.dst_list),
             else:
                 self._add_flow(datapath, priority, match, actions,
-                               time_limit=(int(rule.time_duration)),
-                               table_id=rule.dst_list)
+                                   time_limit=(int(rule.time_duration)),
+                                   table_id=rule.dst_list)
+
 
     """
     Proactively distribute hardcoded firewall rules to the switch
