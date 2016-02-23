@@ -127,6 +127,7 @@ class ACLInterfaceRule:
             items[6] = TABLE_ID_BLACKLIST
         else:
             print("Invalid list specified")
+            return
 
         if len(errors) != 0 :
             print "Invalid rule provided:"
