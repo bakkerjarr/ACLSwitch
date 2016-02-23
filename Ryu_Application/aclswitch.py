@@ -385,27 +385,27 @@ class ACLSwitch(app_manager.RyuApp):
     """
     def _create_reversed_match(self, rule):
         print("Creating a reversed match")
-        match = ofproto_v1_3.OFPMatch()
+        match = ofp13_parser.OFPMatch()
         ip_version = self._return_ip_version(rule.ip_src, rule.ip_dst)
         if ip_version == 4:
             # Match IPv4
             match.append_field(ofproto_v1_3.OXM_OF_ETH_TYPE,
                                ethernet.ether.ETH_TYPE_IP)
             if rule.ip_dst != "*":
-                match.append_field(ofproto_v1_3.OXM_OF_IPV4_SRC,
+                match.append_field(ofproto_v1_3.OXM_OF_IPV4_DST,
                                    int(IPAddress(rule.ip_src)))
             if rule.ip_src != "*":
-                match.append_field(ofproto_v1_3.OXM_OF_IPV4_DST,
+                match.append_field(ofproto_v1_3.OXM_OF_IPV4_SRC,
                                    int(IPAddress(rule.ip_dst)))
         else:
             # Match IPv6
             match.append_field(ofproto_v1_3.OXM_OF_ETH_TYPE,
                                ethernet.ether.ETH_TYPE_IPV6)
             if rule.ip_dst != "*":
-                match.append_field(ofproto_v1_3.OXM_OF_IPV6_SRC,
+                match.append_field(ofproto_v1_3.OXM_OF_IPV6_DST,
                                    IPAddress(rule.ip_src).words)
             if rule.ip_src != "*":
-                match.append_field(ofproto_v1_3.OXM_OF_IPV6_DST,
+                match.append_field(ofproto_v1_3.OXM_OF_IPV6_SRC,
                                    IPAddress(rule.ip_dst).words)
 
         # Match transport layer (layer 4)
@@ -415,20 +415,20 @@ class ACLSwitch(app_manager.RyuApp):
                 match.append_field(ofproto_v1_3.OXM_OF_IP_PROTO,
                                    ipv4.inet.IPPROTO_TCP)  # covers IPv6
                 if rule.port_dst != "*":
-                    match.append_field(ofproto_v1_3.OXM_OF_TCP_SRC,
+                    match.append_field(ofproto_v1_3.OXM_OF_TCP_DST,
                                        int(rule.port_src))
                 if rule.port_src != "*":
-                    match.append_field(ofproto_v1_3.OXM_OF_TCP_DST,
+                    match.append_field(ofproto_v1_3.OXM_OF_TCP_SRC,
                                        int(rule.port_dst))
             elif rule.tp_proto == "udp":
                 # Match UDP
                 match.append_field(ofproto_v1_3.OXM_OF_IP_PROTO,
                                    ipv4.inet.IPPROTO_UDP)  # covers IPv6
                 if rule.port_dst != "*":
-                    match.append_field(ofproto_v1_3.OXM_OF_UDP_SRC,
+                    match.append_field(ofproto_v1_3.OXM_OF_UDP_DST,
                                        int(rule.port_src))
                 if rule.port_src != "*":
-                    match.append_field(ofproto_v1_3.OXM_OF_UDP_DST,
+                    match.append_field(ofproto_v1_3.OXM_OF_UDP_SRC,
                                        int(rule.port_dst))
         print ("match is: " + str(match))
         return match
@@ -802,11 +802,21 @@ class ACLSwitch(app_manager.RyuApp):
         for rule_id in self._policy_to_rules[policy]:
             rule = self._access_control_list[rule_id]
             if rule.time_start == "N/A":
-                priority = self.OFP_MAX_PRIORITY
-                actions = []
-                match = self._create_match(rule)
-                self._add_flow(datapath, priority, match, actions,
-                               table_id=rule.dst_list)
+                if(rule.dst_list==self.TABLE_ID_WHITELIST):
+                    priority = self.OFP_MAX_PRIORITY
+                    actions = None
+                    match = self._create_match(rule)
+                    reversedMatch = self._create_reversed_match(rule)
+                    self._add_flow(datapath, priority, match, actions,
+                                   table_id=rule.dst_list)
+                    self._add_flow(datapath, priority, reversedMatch, actions,
+                                   table_id=rule.dst_list)
+                else:
+                    priority = self.OFP_MAX_PRIORITY
+                    actions = []
+                    match = self._create_match(rule)
+                    self._add_flow(datapath, priority, match, actions,
+                                   table_id=rule.dst_list)
 
     """
     Distribute rules to switches when their time arises. An alarm must
