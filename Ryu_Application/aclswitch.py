@@ -779,7 +779,7 @@ class ACLSwitch(app_manager.RyuApp):
                                table_id=rule.dst_list)
                 if(rule.dst_list==self.TABLE_ID_WHITELIST):
                     self._add_flow(datapath, priority,
-                                   match=self._create_reversed_match(self, rule),
+                                   match=self._create_reversed_match(rule), actions = None,
                                    table_id=rule.dst_list),
             else:
                 self._add_flow(datapath, priority, match, actions,
