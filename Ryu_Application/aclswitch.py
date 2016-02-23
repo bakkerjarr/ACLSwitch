@@ -226,8 +226,10 @@ class ACLSwitch(app_manager.RyuApp):
                                            "port_src": rule.port_src,
                                            "port_dst": rule.port_dst,
                                            "policy": rule.policy,
+                                           "dst_list": rule.dst_list,
                                            "time_start": rule.time_start,
                                            "time_duration": rule.time_duration}
+            print("returning formatted rule" + str(acl_formatted))
         return acl_formatted
 
     """
