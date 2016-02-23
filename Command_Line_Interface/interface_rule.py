@@ -114,6 +114,12 @@ class ACLInterfaceRule:
         buf_in = raw_input(self.PROMPT_RULE_LIST)
         items = buf_in.split(" ")
 
+        if len(items) != 7:
+            print "Expected 7 arguments, " + str(len(items)) + " given."
+            return
+        items[2] = items[2].lower()
+        errors = rule_syntax.check_rule(items[0], items[1], items[2],
+                                        items[3], items[4])
         DSTLIST = 0
         if (items[6] == "whitelist"):
             items[6] = TABLE_ID_WHITELIST
@@ -122,13 +128,6 @@ class ACLInterfaceRule:
         else:
             print("Invalid list specified")
 
-
-        if len(items) != 7:
-            print "Expected 7 arguments, " + str(len(items)) + " given."
-            return
-        items[2] = items[2].lower()
-        errors = rule_syntax.check_rule(items[0], items[1], items[2],
-                                        items[3], items[4])
         if len(errors) != 0 :
             print "Invalid rule provided:"
             for e in errors:
