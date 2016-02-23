@@ -569,6 +569,7 @@ class ACLSwitch(app_manager.RyuApp):
         syntax_results = self._acl_rule_syntax_check(ip_src, ip_dst,
                                                      tp_proto, port_src,
                                                      port_dst)
+        print ("Adding rule with parameters: " + str(dst_list))
         if not syntax_results[0]:
             print("[-] " + syntax_results[1])
             return (False, syntax_results[1], None)

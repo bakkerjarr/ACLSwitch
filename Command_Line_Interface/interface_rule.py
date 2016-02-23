@@ -140,7 +140,6 @@ class ACLInterfaceRule:
         try:
             resp = requests.post(self.URL_ACLSWITCH_RULE, data=add_req,
                                 headers = {"Content-type": "application/json"})
-            print("adding request with rule destination list" + add_req)
         except:
             print self.TEXT_ERROR_CONNECTION
             return

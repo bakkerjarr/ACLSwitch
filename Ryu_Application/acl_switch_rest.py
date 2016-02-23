@@ -211,6 +211,7 @@ class ACLSwitchREST(ControllerBase):
     def acl_rule_add_time(self, req, ** kwargs):
         try:
             ruleReq = json.loads(req.body)
+            print("Adding rule in API with body: " + str(req.body))
         except:
             return Response(status=400, body="Unable to parse JSON.")
         if not self.check_rule_time_json(ruleReq):
@@ -223,6 +224,7 @@ class ACLSwitchREST(ControllerBase):
                                                    ruleReq["policy"],
                                                    ruleReq["time_start"],
                                                    ruleReq["time_duration"])
+        print("Rule request in API is: " + str(req.body))
         if result[0] == False:
             return Response(status=400, body=result[1])
         return Response(status=200, body=result[1])
@@ -276,7 +278,7 @@ class ACLSwitchREST(ControllerBase):
     @return - True if ruleJSON is valid, False otherwise.
     """
     def check_rule_time_json(self, ruleJSON):
-        if len(ruleJSON) != 8:
+        if len(ruleJSON) != 9:
             return False
         if not "ip_src" in ruleJSON:
             return False
@@ -289,6 +291,8 @@ class ACLSwitchREST(ControllerBase):
         if not "port_dst" in ruleJSON:
             return False
         if not "policy" in ruleJSON:
+            return False
+        if not "dst_list" in ruleJSON:
             return False
         if not "time_start" in ruleJSON:
             return False
