@@ -56,6 +56,10 @@ from ryu.lib.packet import tcp
 # ACLSwitch modules
 from aclswitch_logging import ACLSwitchLogging
 
+# Other modules
+import json
+import os
+
 __author__ = "Jarrod N. Bakker"
 __status__ = "Development"
 
@@ -64,6 +68,7 @@ class ACLSwitch(app_manager.RyuApp):
     """Main class for ACLSwitch. Used to create objects and listen for OpenFlow events.
     """
 
+    _CONFIG_FILE_NAME = "config.json"
     _TABLE_ID_ACL = 0
     _TABLE_ID_L2 = 1
 
@@ -75,10 +80,51 @@ class ACLSwitch(app_manager.RyuApp):
         super(ACLSwitch, self).__init__(*args, **kwargs)
         self.mac_to_port = {}
 
-        # Create objects to manage stuff
+        # Create objects to manage different features
+        # TODO Collect the start-up status of each feature in a dict
+
+        # Read config file
+        # TODO Command line argument for custom location for config file
+        file_loc = os.path.dirname(__file__) + "/" + \
+                   self._CONFIG_FILE_NAME
+        self._import_config_file(file_loc)
 
         # TODO If one of the components fails to start then the application should terminate.
         self._logging.success("ACLSwitch started successfully.")
+
+    def _import_config_file(self, file_loc):
+        """Import ACLSwitch config from a JSON-formatted file.
+
+        :param file_loc: Path to the configuration file.
+        :return:
+        """
+        # check that file exists
+        # READ!
+        try:
+            # TODO use aclswitch_logging
+            buf_in = open(file_loc)
+            self._logging.info("Reading config from file: " + file_loc)
+            for line in buf_in:
+                if line[0] == "#" or not line.strip():
+                    continue  # Skip file comments and empty lines
+                try:
+                    config = json.loads(line)
+                except ValueError:
+                    self._logging.fail(line + " is not valid JSON.")
+                    continue
+                if "rule" in config:
+                    # TODO Change time-enforced rule syntax to overload normal rule syntax
+                    self._logging.info("Parsing rule: {0}".format(
+                        config["rule"]))
+                elif "policy" in config:
+                    self._logging.info("Parsing policy domain: {"
+                                       "0}".format(config["policy"]))
+                else:
+                    self._logging.fail(line + "is not recognised JSON.")
+            buf_in.close()
+        except IOError:
+            self._logging.fail("Unable to read from file: " +
+                               str(file_loc))
 
     # Methods for modifying switch flow tables
 
