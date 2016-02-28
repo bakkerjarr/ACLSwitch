@@ -54,6 +54,8 @@ from ryu.lib.packet import packet
 from ryu.lib.packet import tcp
 
 # ACLSwitch modules
+from acl.acl_manager import ACLManager
+from aclswitch_api import ACLSwitchAPI
 from aclswitch_logging import ACLSwitchLogging
 
 # Other modules
@@ -81,7 +83,8 @@ class ACLSwitch(app_manager.RyuApp):
         self.mac_to_port = {}
 
         # Create objects to manage different features
-        # TODO Collect the start-up status of each feature in a dict
+        self._acl_man = ACLManager(self._logging)
+        self._api = ACLSwitchAPI(self._logging, self._acl_man)
 
         # Read config file
         # TODO Command line argument for custom location for config file
@@ -89,7 +92,6 @@ class ACLSwitch(app_manager.RyuApp):
                    self._CONFIG_FILE_NAME
         self._import_config_file(file_loc)
 
-        # TODO If one of the components fails to start then the application should terminate.
         self._logging.success("ACLSwitch started successfully.")
 
     def _import_config_file(self, file_loc):
@@ -116,6 +118,14 @@ class ACLSwitch(app_manager.RyuApp):
                     # TODO Change time-enforced rule syntax to overload normal rule syntax
                     self._logging.info("Parsing rule: {0}".format(
                         config["rule"]))
+                    result = self._api.create_acl_rule(config["rule"])
+                    if result[0] is True:
+                        self._logging.success("Rule created: {"
+                                              "0}".format(config[
+                                                                "rule"]))
+                    else:
+                        self._logging.fail("Rule creation failed: {"
+                                           "0}".format(result[1]))
                 elif "policy" in config:
                     self._logging.info("Parsing policy domain: {"
                                        "0}".format(config["policy"]))
