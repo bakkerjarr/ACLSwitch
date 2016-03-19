@@ -16,4 +16,6 @@
 #   {"rule_time":{"ip_src":"", "ip_dst":"", "tp_proto":"", "port_src":"", "port_dst":"", "policy":"", "time_start":"", "time_duration":""}}
 #
 
-
+{"policy":"b_gw"}
+{"rule":{"ip_src":"10.0.0.1", "ip_dst":"10.0.0.2", "tp_proto":"*", "port_src":"*", "port_dst":"*", "policy":"default"}}
+{"rule":{"ip_src":"10.0.0.1", "ip_dst":"10.0.0.3", "tp_proto":"tcp", "port_src":"*", "port_dst":"*", "policy":"b_gw"}}
