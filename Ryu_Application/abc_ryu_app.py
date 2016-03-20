@@ -12,6 +12,14 @@ class ABCRyuApp:
     __metaclass__ = ABCMeta
 
     @abstractmethod
+    def __init__(self, contr):
+        """Initialise the L2Switch application.
+
+        :param contr: The controller abstraction.
+        """
+        pass
+
+    @abstractmethod
     def get_app_name(self):
         """Return the name of the app to the caller.
 

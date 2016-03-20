@@ -19,13 +19,9 @@ class L2Switch(ABCRyuApp):
     _APP_NAME = "L2Switch"
     _EXPECTED_HANDLERS = (EventOFPPacketIn.__name__,
                           EventOFPSwitchFeatures.__name__)
-    _TABLE_ID_L2 = 0  # Change this later!
+    _TABLE_ID_L2 = 1
 
     def __init__(self, contr):
-        """Initialise the L2Switch application.
-
-        :param contr: The controller abstraction.
-        """
         self._contr = contr
         self.mac_to_port = {}
         self._supported = self._verify_contr_handlers()

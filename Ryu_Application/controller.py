@@ -5,6 +5,7 @@ from ryu.controller.handler import CONFIG_DISPATCHER, MAIN_DISPATCHER
 from ryu.controller.handler import set_ev_cls
 
 from l2switch.l2switch import L2Switch
+from aclswitch.aclswitch import ACLSwitch
 
 __author__ = "Jarrod N. Bakker"
 __status__ = "Development"
@@ -29,8 +30,7 @@ class Controller(app_manager.RyuApp):
                           self._EVENT_OFP_FLOW_REMOVED: [],
                           self._EVENT_OFP_PACKET_IN: []}
         self._register_app(L2Switch(self))
-
-        self.mac_to_port = {}
+        self._register_app(ACLSwitch(self))
 
     def get_ofpe_handlers(self):
         """Return the tuple of the OpenFlow protocol event handlers.
@@ -55,10 +55,8 @@ class Controller(app_manager.RyuApp):
             return
         # Record what event handlers the Ryu app is listening for
         app_handlers = app_obj.get_expected_handlers()
-        print(self._handlers)
         for handler in app_handlers:
             self._handlers[handler].append(app_name)
-        print(self._handlers)
 
     # Methods that send data to OpenFlow switches
     def add_flow(self, datapath, priority, match, inst, time_limit,
@@ -113,7 +111,7 @@ class Controller(app_manager.RyuApp):
 
         self.logger.info("Switch \'{0}\' connected.".format(datapath_id))
 
-        for app in self._handlers[self._EVENT_OFP_PACKET_IN]:
+        for app in self._handlers[self._EVENT_OFP_SW_FEATURES]:
             self._apps[app].switch_features(event)
 
         # Install table-miss flow entry for the ACL flow table. No
@@ -152,8 +150,8 @@ class Controller(app_manager.RyuApp):
         """
         msg = event.msg
         match = msg.match
-        print("Flow table entry removed.\n\t Flow match: {0}".format(
-            match))
+        self.logger.info("Flow table entry removed.\n\t Flow match: {"
+                         "0}".format(match))
 
     @set_ev_cls(ofp_event.EventOFPPacketIn, MAIN_DISPATCHER)
     def _packet_in_handler(self, event):
@@ -164,71 +162,8 @@ class Controller(app_manager.RyuApp):
         # If you hit this you might want to increase
         # the "miss_send_length" of your switch
         if event.msg.msg_len < event.msg.total_len:
-            print("{0}: Packet truncated: only {1} of {2} "
-                  "bytes".format(self._APP_NAME, event.msg.msg_len,
-                                 event.msg.total_len))
+            self.logger.warning("Packet truncated: only {0} of {1} "
+                                "bytes".format(event.msg.msg_len,
+                                               event.msg.total_len))
         for app in self._handlers[self._EVENT_OFP_PACKET_IN]:
             self._apps[app].packet_in(event)
-        # If you hit this you might want to increase
-        # the "miss_send_length" of your switch
-        #if event.msg.msg_len < event.msg.total_len:
-            #self._logging.warning("Packet truncated: only {0} of {1} "
-                                  #"bytes".format(event.msg.msg_len,
-                                  #               event.msg.total_len))
-        msg = event.msg
-        datapath = msg.datapath
-        ofproto = datapath.ofproto
-        parser = datapath.ofproto_parser
-        in_port = msg.match['in_port']
-
-        #pkt = packet.Packet(msg.data)
-        #eth_head = pkt.get_protocols(ethernet.ethernet)[0]
-
-        #eth_dst = eth_head.dst
-        #eth_src = eth_head.src
-
-        dpid = datapath.id
-       # self.mac_to_port.setdefault(dpid, {})
-
-        #self._logging.info("Packet in\t-\tData-path ID: {0}, Source "
-         #                  "Ethernet: {1}, Destination Ethernet: {2}, "
-          #                 "Ingress switch port: {3}".format(dpid,
-           #                                                  eth_src,
-            ##                                                in_port))
-
-        # learn a mac address to avoid FLOOD next time.
-        #self.mac_to_port[dpid][eth_src] = in_port
-
-        #if eth_dst in self.mac_to_port[dpid]:
-        #    out_port = self.mac_to_port[dpid][eth_dst]
-        #else:
-        #    out_port = ofproto.OFPP_FLOOD
-
-        #actions = [parser.OFPActionOutput(out_port)]
-
-        # install a flow to avoid packet_in next time
-        #if out_port != ofproto.OFPP_FLOOD:
-        #    match = parser.OFPMatch(in_port=in_port, eth_dst=eth_dst)
-
-            #self._logging.info("New flow\t-\t{0}".format(pkt))
-            #priority = ofproto_v1_3.OFP_DEFAULT_PRIORITY
-
-            # verify if we have a valid buffer_id, if yes avoid to send
-            # both flow_mod & packet_out
-            #if msg.buffer_id != ofproto.OFP_NO_BUFFER:
-             #   #self._add_flow(datapath, priority, match, actions,
-                             #  msg.buffer_id)
-              #  return
-            #else:
-                #self._add_flow(datapath, priority, match, actions)
-#                pass
-
- #       data = None
-  #      if msg.buffer_id == ofproto.OFP_NO_BUFFER:
-   #         data = msg.data
-
-    #    out = parser.OFPPacketOut(datapath=datapath,
-     #                             buffer_id=msg.buffer_id,
-      #                            in_port=in_port, actions=actions,
-       #                           data=data)
-        #datapath.send_msg(out)
