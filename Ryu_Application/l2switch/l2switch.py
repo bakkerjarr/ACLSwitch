@@ -89,7 +89,7 @@ class L2Switch(ABCRyuApp):
                                   buffer_id=msg.buffer_id,
                                   in_port=in_port, actions=actions,
                                   data=data)
-        self._contr.send_msg(datapath, out)
+        self._contr.packet_out(datapath, out)
 
     def switch_features(self, event):
         """Process a switch features event from the controller.

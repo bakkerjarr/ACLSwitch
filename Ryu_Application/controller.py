@@ -59,6 +59,7 @@ class Controller(app_manager.RyuApp):
             self._handlers[handler].append(app_name)
 
     # Methods that send data to OpenFlow switches
+
     def add_flow(self, datapath, priority, match, inst, time_limit,
                   table_id, buffer_id=None):
         """Reactively add a flow table entry to a switch's flow table.
@@ -89,9 +90,17 @@ class Controller(app_manager.RyuApp):
                                     priority=priority, match=match,
                                     flags=ofproto.OFPFF_SEND_FLOW_REM,
                                     instructions=inst, table_id=table_id)
-        self.send_msg(datapath, mod)
+        self._send_msg(datapath, mod)
 
-    def send_msg(self, datapath, msg):
+    def packet_out(self, datapath, out):
+        """Send a packet out message to a switch.
+
+        :param datapath: The switch to send the message to.
+        :param out: The packet out message.
+        """
+        self._send_msg(datapath, out)
+
+    def _send_msg(self, datapath, msg):
         """Send a message to a switch such as an OFPPacketOut message.
 
         :param datapath: The switch to send the message to.
