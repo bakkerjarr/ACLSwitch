@@ -1,9 +1,11 @@
-# Module imports
+# Ryu and OpenFlow modules
+from ryu.app.ofctl import api
 from ryu.base import app_manager
 from ryu.controller import ofp_event
 from ryu.controller.handler import CONFIG_DISPATCHER, MAIN_DISPATCHER
 from ryu.controller.handler import set_ev_cls
 
+# Application modules
 from l2switch.l2switch import L2Switch
 from aclswitch.aclswitch import ACLSwitch
 
@@ -108,6 +110,15 @@ class Controller(app_manager.RyuApp):
         """
         datapath.send_msg(msg)
 
+    # Misc.
+    def switch_get_datapath(self, datapath_id):
+        """Return a datapath object given its datapath ID.
+
+        :param datapath_id: ID of a datapath i.e. switch ID.
+        :return: Datapath object.
+        """
+        return api.get_datapath(self, datapath_id)
+
     # OpenFlow switch event handlers
 
     @set_ev_cls(ofp_event.EventOFPSwitchFeatures, CONFIG_DISPATCHER)
@@ -122,34 +133,6 @@ class Controller(app_manager.RyuApp):
 
         for app in self._handlers[self._EVENT_OFP_SW_FEATURES]:
             self._apps[app].switch_features(event)
-
-        # Install table-miss flow entry for the ACL flow table. No
-        # buffer is used for this table-miss entry as matching flows
-        # get passed onto the L2 switching flow table.
-        #match = parser.OFPMatch()
-        # No action required for forwarding to another table
-        #actions = None
-        #self._add_flow(datapath, 0, match, actions,
-        #               table_id=self._TABLE_ID_ACL)
-
-        # Install table-miss flow entry for the L2 switching flow table.
-        #
-        # We specify NO BUFFER to max_len of the output action due to
-        # OVS bug. At this moment, if we specify a lesser number, e.g.,
-        # 128, OVS will send Packet-In with invalid buffer_id and
-        # truncated packet data. In that case, we cannot output packets
-        # correctly.  The bug has been fixed in OVS v2.1.0.
-        #actions = [parser.OFPActionOutput(ofproto.OFPP_CONTROLLER,
-         #                                 ofproto.OFPCML_NO_BUFFER)]
-        #self._add_flow(datapath, 0, match, actions)
-
-        # Take note of switches (via their datapaths)
-        # TODO Activate the following once policy domains have been implemented.
-        #dp_id = ev.msg.datapath_id
-        #self._connected_switches[dp_id] = [self.POLICY_DEFAULT]
-
-        # Distribute the list of rules to the switch
-        #self._distribute_rules_policy_set(datapath, self.POLICY_DEFAULT)
 
     @set_ev_cls(ofp_event.EventOFPFlowRemoved)
     def _flow_removed_handler(self, event):
