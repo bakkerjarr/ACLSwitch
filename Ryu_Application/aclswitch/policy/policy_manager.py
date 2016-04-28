@@ -58,7 +58,7 @@ class PolicyManager:
                 switches.append(switch_id)
         return switches
 
-    def rule_assign_policy(self, policy, rule_id):
+    def policy_add_rule(self, policy, rule_id):
         """Add a rule to a policy domain.
 
         :param policy: Policy to assign rule to.
@@ -66,8 +66,8 @@ class PolicyManager:
         """
         self._policy_to_rules[policy].append(rule_id)
 
-    def rule_revoke_policy(self, policy, rule_id):
-        """Revoke a rule from a policy domain.
+    def policy_remove_rule(self, policy, rule_id):
+        """Remove a rule from a policy domain.
 
         :param policy: The policy domain to revoke a rule from.
         :param rule_id: An ACL rule.
@@ -98,3 +98,12 @@ class PolicyManager:
             return False
         self._connected_switches[switch_id] = policy
         return True
+
+    def switch_revoke_policy(self, switch_id, policy):
+        """Revoke a policy domain from a switch.
+
+        :param switch_id: The switch to revoke from.
+        :param policy: The policy to revoke.
+        :return: True if successful, False otherwise.
+        """
+        pass

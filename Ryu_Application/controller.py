@@ -1,5 +1,6 @@
 # Ryu and OpenFlow modules
 from ryu.app.ofctl import api
+from ryu.app.wsgi import WSGIApplication
 from ryu.base import app_manager
 from ryu.controller import ofp_event
 from ryu.controller.handler import CONFIG_DISPATCHER, MAIN_DISPATCHER
@@ -21,9 +22,11 @@ class Controller(app_manager.RyuApp):
     instantiated from the controller class as a result.
     """
 
+    _CONTEXTS = {"wsgi": WSGIApplication}
     _EVENT_OFP_SW_FEATURES = ofp_event.EventOFPSwitchFeatures.__name__
     _EVENT_OFP_FLOW_REMOVED = ofp_event.EventOFPFlowRemoved.__name__
     _EVENT_OFP_PACKET_IN = ofp_event.EventOFPPacketIn.__name__
+    _INSTANCE_NAME_CONTR = "ryu_controller_abstraction"
 
     def __init__(self, *args, **kwargs):
         super(Controller, self).__init__(*args, **kwargs)
@@ -31,6 +34,8 @@ class Controller(app_manager.RyuApp):
         self._handlers = {self._EVENT_OFP_SW_FEATURES: [],
                           self._EVENT_OFP_FLOW_REMOVED: [],
                           self._EVENT_OFP_PACKET_IN: []}
+        self._wsgi = kwargs['wsgi']
+        # Insert Ryu applications below
         self._register_app(L2Switch(self))
         self._register_app(ACLSwitch(self))
 
@@ -40,6 +45,17 @@ class Controller(app_manager.RyuApp):
         :return: A tuple.
         """
         return self._handlers.keys()
+
+    def register_rest_wsgi(self, rest_wsgi, **kwargs):
+        """Register a WSGI with Ryu.
+
+        :param rest_wsgi: The WSGI to register.
+        :return: True is successful, False otherwise.
+        """
+        all_kwargs = kwargs["kwargs"].copy()
+        all_kwargs[self._INSTANCE_NAME_CONTR] = self
+        self._wsgi.register(rest_wsgi, all_kwargs)
+        return True
 
     def _register_app(self, app_obj):
         """Register a Ryu app with the controller abstraction.
@@ -93,6 +109,26 @@ class Controller(app_manager.RyuApp):
                                     flags=ofproto.OFPFF_SEND_FLOW_REM,
                                     instructions=inst, table_id=table_id)
         self._send_msg(datapath, mod)
+
+    def remove_flow(self, datapath, parser, remove_type, priority,
+                    match, out_port, out_group):
+        """Remove a flow table entry from a switch.
+
+        The callee should decide of the removal type.
+
+        :param datapath: The switch to remove the flow from.
+        :param parser: Parser for the OpenFlow switch.
+        :param remove_type: OFPFC_DELETE or OFPFC_DELETE_STRICT.
+        :param priority: Priority of the flow table entry.
+        :param match: What packet header fields should be matched.
+        :param out_port: Switch port to match.
+        :param out_group: Switch group to match.
+        """
+        mod = parser.OFPFlowMod(datapath=datapath, command=remove_type,
+                                priority=priority, match=match,
+                                out_port=out_port,
+                                out_group=out_group)
+        datapath.send_msg(mod)
 
     def packet_out(self, datapath, out):
         """Send a packet out message to a switch.

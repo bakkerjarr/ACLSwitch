@@ -53,6 +53,7 @@ from aclswitch_api import ACLSwitchAPI
 from aclswitch_api import ReturnStatus
 from aclswitch_logging import ACLSwitchLogging
 from flow.flow_manager import FlowManager
+from rest_wsgi import ACLSwitchREST
 
 # Other modules
 from netaddr import IPAddress  # TODO Does Ryu have a friendly packet library
@@ -70,6 +71,7 @@ class ACLSwitch(ABCRyuApp):
     _APP_NAME = "ACLSwitch"
     _CONFIG_FILE_NAME = "config.json"
     _EXPECTED_HANDLERS = (EventOFPSwitchFeatures.__name__, )
+    _INSTANCE_NAME_ASW_API = "asw_api"
     # Default priority is defined to be in the middle (0x8000 in 1.3)
     # Note that for a priority p, 0 <= p <= MAX (i.e. 65535)
     _OFP_MAX_PRIORITY = ofproto_v1_3.OFP_DEFAULT_PRIORITY * 2 - 1
@@ -98,6 +100,11 @@ class ACLSwitch(ABCRyuApp):
         self._import_config_file(file_loc)
 
         self._init_policies = [self._POLICY_DEFAULT]
+
+        # Register REST WSGI through the controller app
+        self._contr.register_rest_wsgi(ACLSwitchREST, kwargs=
+                                       {self._INSTANCE_NAME_ASW_API:
+                                        self._api})
 
         self._logging.success("ACLSwitch started successfully.")
 
@@ -152,7 +159,7 @@ class ACLSwitch(ABCRyuApp):
         """Add a rule to the blacklist flow table as a flow table entry.
 
         :param switch_id: The switch to add an entry to.
-        :param rule: The rule to to add.
+        :param rule: The rule to add.
         """
         datapath = self._contr.switch_get_datapath(switch_id)
         ofproto = datapath.ofproto
@@ -164,6 +171,23 @@ class ACLSwitch(ABCRyuApp):
                                              actions)]
         self._contr.add_flow(datapath, priority, match, inst, 0,
                              self._TABLE_ID_ACL)
+
+    def remove_blacklist_entry(self, switch_id, rule):
+        """Remove a blacklist flow table entry.
+
+        :param switch_id: The switch to remove the entry from.
+        :param rule: The rule to remove.
+        """
+        datapath = self._contr.switch_get_datapath(switch_id)
+        ofproto = datapath.ofproto
+        parser = datapath.ofproto_parser
+        remove_type = ofproto.OFPFC_DELETE_STRICT
+        priority = self._OFP_MAX_PRIORITY
+        match = self._create_match(rule)
+        out_port = ofproto.OFPP_ANY
+        out_group = ofproto.OFPG_ANY
+        self._contr.remove_flow(datapath, parser, remove_type, priority,
+                                match, out_port, out_group)
 
     def _create_match(self, rule):
         """Create an OFPMatch instance based on the contents of an

@@ -59,10 +59,34 @@ class ACLManager:
                                   time_duration=0)
         if self._check_rule_exists(new_rule):
             return None
-        rule_id = str(self._acl_id_count)
+        rule_id = self._acl_id_count
         self._access_control_list[rule_id] = new_rule
         self._acl_id_count += 1  # Increment to keep IDs unique
         return rule_id
+
+    def acl_remove_rule(self, rule_id):
+        """Remove a rule from the ACL.
+
+        Assumes that the rule ID is valid.
+
+        :param rule_id: ID of the rule to remove.
+        :return: The rule that was removed.
+        """
+        rule = self.acl_get_rule(rule_id)
+        del self._access_control_list[rule_id]
+        return rule
+
+    def acl_is_rule(self, rule_id):
+        """Check if a rule ID refers to a rule that exists.
+
+        :param rule_id: ID of the rule to check.
+        :return: True if the rule exists, False otherwise.
+        """
+        try:
+            self._access_control_list[rule_id]
+        except KeyError:
+            return False
+        return True
 
     def acl_get_rule(self, rule_id):
         """Return a rule given a rule ID.

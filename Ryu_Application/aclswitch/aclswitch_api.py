@@ -25,7 +25,7 @@ class ACLSwitchAPI:
         self._pol_man = PolicyManager(self._logging)
 
     def acl_create_rule(self, rule):
-        """Endpoint for creating an ACL rule.
+        """Create an ACL rule.
 
         :param rule: dict of the rule to create.
         :return: Result of the operation.
@@ -37,13 +37,26 @@ class ACLSwitchAPI:
         rule_id = self._acl_man.acl_add_rule(rule)
         if rule_id is None:
             return ReturnStatus.RULE_EXISTS
-        self._pol_man.rule_assign_policy(rule["policy"], rule_id)
+        self._pol_man.policy_add_rule(rule["policy"], rule_id)
         switches = self._pol_man.policy_get_switches(rule["policy"])
-        self._flow_man.flow_deploy_single_rule(rule, switches)
+        self._flow_man.flow_deploy_single_rule(self.acl_get_rule(
+            rule_id), switches)
+        print("\nRule created with id: {0}\n".format(rule_id))
         return ReturnStatus.RULE_CREATED
 
     def acl_remove_rule(self, rule_id):
-        pass
+        """Remove an ACL rule.
+
+        :param rule_id: ID of the rule to remove.
+        :return: Result of the operation.
+        """
+        if not self._acl_man.acl_is_rule(rule_id):
+            return ReturnStatus.RULE_NOT_EXISTS
+        rule = self._acl_man.acl_remove_rule(rule_id)
+        self._pol_man.policy_remove_rule(rule.policy, rule_id)
+        switches = self._pol_man.policy_get_switches(rule.policy)
+        self._flow_man.flow_remove_single_rule(rule, switches)
+        return ReturnStatus.RULE_REMOVED
 
     def acl_get_rule(self, rule_id):
         """Return a rule given a rule ID.
@@ -85,7 +98,6 @@ class ACLSwitchAPI:
         rule_ids = []
         for policy in policies:
             rule_ids = rule_ids + self._pol_man.policy_get_rules(policy)
-        print(rule_ids)
         rules = []
         for r_id in rule_ids:
             rules.append(self.acl_get_rule(r_id))

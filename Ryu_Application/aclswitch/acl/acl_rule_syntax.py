@@ -1,5 +1,6 @@
 # Other modules
 from netaddr import IPAddress
+from netaddr import AddrFormatError
 
 __author__ = "Jarrod N. Bakker"
 __status__ = "Development"
@@ -58,7 +59,7 @@ class ACLRuleSyntax:
         try:
             addr = IPAddress(address)
             return True
-        except ValueError:
+        except AddrFormatError:
             if address == "*":
                 return True
             return False
