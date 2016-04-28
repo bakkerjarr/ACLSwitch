@@ -1,19 +1,26 @@
 #!/usr/bin/env python3
 
 import cmd
+import requests
 import signal
 import sys
 
-from acli_policy import ACLIPolicy
-from acli_rule import ACLIRule
-from acli_view import ACLIView
+from modules.policy import Policy
+from modules.rule import Rule
+from modules.view import View
 
 __author__ = "Jarrod N. Bakker"
 __status__ = "development"
 
-class ACLIMain(cmd.Cmd):
+
+class ACLSwitchCLI(cmd.Cmd):
     """An interactive Command Line Interface (CLI) for ACLSwitch.
     """
+
+    MSG_ERR_ACLSW_CON = "ERROR: Unable to establish a connection with " \
+                        "ACLSwitch."
+    MSG_ERR_ACLSW_CON_LOST = "ERROR: Connection with ACLSwitch lost."
+    _URL_ACLSW = "http://127.0.0.1:8080/acl_switch/"
 
     def __init__(self):
         """Initialise the main interface.
@@ -26,9 +33,9 @@ class ACLIMain(cmd.Cmd):
                      "interface.\nType help or ? to list thei " \
                      "available commands.\n"
         self.prompt = "(ACLSwitch) "
-        self._policy = ACLIPolicy(self)
-        self._rule = ACLIRule(self)
-        self._view = ACLIView(self)
+        self._policy = Policy(self)
+        self._rule = Rule(self)
+        self._view = View(self)
         # TODO After CLI start-up, heartbeat ACLSwitch to see if it's live
 
     def do_policy(self, args):
@@ -51,6 +58,10 @@ class ACLIMain(cmd.Cmd):
         """
         self._close_program()
 
+    def _heartbeat(self):
+
+        pass
+
     def signal_handler(self, sig, frame):
         self._close_program()
 
@@ -58,6 +69,6 @@ class ACLIMain(cmd.Cmd):
         sys.exit(0)
 
 if __name__ == "__main__":
-    cli = ACLIMain()
+    cli = ACLSwitchCLI()
     cli.cmdloop()
 

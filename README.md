@@ -31,3 +31,7 @@ $ pip install Scapy
 ```bash
 $ pip install netifaces
 ```
+- requests
+```bash
+$ pip3 install requests
+```

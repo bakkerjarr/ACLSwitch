@@ -6,7 +6,7 @@ __author__ = "Jarrod N. Bakker"
 __status__ = "development"
 
 
-class ACLIRule(cmd.Cmd):
+class Rule(cmd.Cmd):
 
     def __init__(self, parent):
         """Initialise the rule interface.

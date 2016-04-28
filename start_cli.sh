@@ -6,4 +6,4 @@
 #usage          :bash start_cli.sh
 #========================================================================
 clear ;
-python ./Command_Line_Interface/interface_main.py ;
+python ./Command_Line_Interface/aclsw_cli.py ;

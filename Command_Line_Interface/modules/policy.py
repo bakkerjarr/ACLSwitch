@@ -6,16 +6,16 @@ __author__ = "Jarrod N. Bakker"
 __status__ = "development"
 
 
-class ACLIView(cmd.Cmd):
+class Policy(cmd.Cmd):
 
     def __init__(self, parent):
-        """Initialise the view interface.
+        """Initialise the policy interface.
 
         :param parent: The parent CLI.
         """
         cmd.Cmd.__init__(self)
         self._parent_cli = parent
-        self.prompt = self._parent_cli.prompt[:-2] + "->view) "
+        self.prompt = self._parent_cli.prompt[:-2] + "->policy) "
 
     def do_exit(self, args):
         """Go back to the previous interface options.
