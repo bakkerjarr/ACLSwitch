@@ -16,6 +16,7 @@ class PolicyManager:
         """
         self._logging = logging
         self._logging.info("Initialising PolicyManager...")
+        # TODO change below to a  switch_id dict:set of policies
         self._connected_switches = {}  # switch_id_id:[policy]
         self._policy_to_rules = {}  # policy:[rule_id]
 
@@ -28,6 +29,19 @@ class PolicyManager:
         if self.policy_exists(policy):
             return False
         self._policy_to_rules[policy] = []
+        return True
+
+    def policy_remove(self, policy):
+        """Remove a policy domain.
+
+        Assumes the policy has no rules with it.
+
+        :param policy: Name of the policy domain.
+        :return: True if successful, False otherwise.
+        """
+        if not self.policy_exists(policy):
+            return False
+        del self._policy_to_rules[policy]
         return True
 
     def policy_exists(self, policy):
@@ -74,16 +88,13 @@ class PolicyManager:
         """
         self._policy_to_rules[policy].remove(rule_id)
 
-    def switch_add(self, switch_id, policies):
+    def switch_connect(self, switch_id):
         """Inform the policy manager that a switch has connected to
-        the network and initialise it with a list of policies.
+        the network.
 
         :param switch_id: Switch identifier, typically the datapath ID.
-        :param policies: List of policies to assign to the switch.
         """
         self._connected_switches[switch_id] = []
-        for policy in policies:
-            self.switch_assign_policy(switch_id, policy)
 
     def switch_assign_policy(self, switch_id, policy):
         """Assign a policy domain to a switch.
@@ -93,10 +104,9 @@ class PolicyManager:
         :return: True if the policy wasn't already assigned,
         False otherwise.
         """
-        # send self._policy_to_rules[policy] to ACL
         if policy in self._connected_switches[switch_id]:
             return False
-        self._connected_switches[switch_id] = policy
+        self._connected_switches[switch_id].append(policy)
         return True
 
     def switch_revoke_policy(self, switch_id, policy):
@@ -106,4 +116,7 @@ class PolicyManager:
         :param policy: The policy to revoke.
         :return: True if successful, False otherwise.
         """
-        pass
+        if policy not in self._connected_switches[switch_id]:
+            return False
+        self._connected_switches[switch_id].remove(policy)
+        return True

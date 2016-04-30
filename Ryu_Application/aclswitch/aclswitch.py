@@ -99,8 +99,6 @@ class ACLSwitch(ABCRyuApp):
                     self._CONFIG_FILE_NAME)
         self._import_config_file(file_loc)
 
-        self._init_policies = [self._POLICY_DEFAULT]
-
         # Register REST WSGI through the controller app
         self._contr.register_rest_wsgi(ACLSwitchREST, kwargs=
                                        {self._INSTANCE_NAME_ASW_API:
@@ -276,7 +274,8 @@ class ACLSwitch(ABCRyuApp):
         self._contr.add_flow(datapath, 0, match, inst, 0,
                              self._TABLE_ID_ACL)
         # Take note of switches (via their datapaths IDs)
-        self._api.policy_add_switch(datapath_id, self._init_policies)
+        self._api.switch_connect(datapath_id)
+        self._api.policy_assign_switch(datapath_id, self._POLICY_DEFAULT)
 
     def get_app_name(self):
         return self._APP_NAME

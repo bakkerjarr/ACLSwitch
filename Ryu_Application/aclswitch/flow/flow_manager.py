@@ -49,6 +49,18 @@ class FlowManager:
         for switch_id in switches:
             self._aclswitch.add_blacklist_entry(switch_id, rule)
 
+    def flow_remove_multiple_rules(self, switch_id, rules):
+        """Remove multiple rules from a single switch.
+
+        This function currently assumes that rules will be successfully
+        removed.
+
+        :param switch_id: The switch to remove the rules from.
+        :param rules: List of rules to remove.
+        """
+        for rule in rules:
+            self._aclswitch.remove_blacklist_entry(switch_id, rule)
+
     def flow_remove_single_rule(self, rule, switches):
         """Remove a single ACL rule from a group of switches.
 

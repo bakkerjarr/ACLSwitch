@@ -9,7 +9,7 @@ __status__ = "Development"
 
 
 class ACLSwitchREST(ControllerBase):
-
+    # TODO Add method comments
     # Fields for kwargs
     _INSTANCE_NAME_CONTR = "ryu_controller_abstraction"
     _INSTANCE_NAME_ASW_API = "asw_api"
@@ -48,8 +48,8 @@ class ACLSwitchREST(ControllerBase):
         body = json.dumps("get_acls endpoint set.")
         return Response(content_type="application/json", body=body)
 
-    @route("aclswitch", _URL_ACL, methods=["PUT"])
-    def put_acl(self, req, **kwargs):
+    @route("aclswitch", _URL_ACL, methods=["POST"])
+    def post_acl(self, req, **kwargs):
         try:
             rule_req = json.loads(req.body)
         except ValueError:
@@ -64,7 +64,7 @@ class ACLSwitchREST(ControllerBase):
         except ValueError:
             return Response(status=400, body="Unable to parse JSON.")
         self._api.acl_remove_rule(rule_req["rule_id"])
-
+        # TODO send success response
 
     ######
     ### Policy endpoints
@@ -74,20 +74,49 @@ class ACLSwitchREST(ControllerBase):
         body = json.dumps("get_policies endpoint set.")
         return Response(content_type="application/json", body=body)
 
-    @route("aclswitch", _URL_POLICY, methods=["PUT"])
-    def put_policy(self, req, **kwargs):
-        pass
+    @route("aclswitch", _URL_POLICY, methods=["POST"])
+    def post_policy(self, req, **kwargs):
+        try:
+            policy_req = json.loads(req.body)
+        except ValueError:
+            return Response(status=400, body="Unable to parse JSON.")
+        result = self._api.policy_create(policy_req["policy"])
+        print(result)
+        # TODO send success response
 
     @route("aclswitch", _URL_POLICY, methods=["DELETE"])
     def delete_policy(self, req, **kwargs):
-        pass
+        try:
+            policy_req = json.loads(req.body)
+        except ValueError:
+            return Response(status=400, body="Unable to parse JSON.")
+        result = self._api.policy_remove(policy_req["policy"])
+        print(result)
+        # TODO send success response
 
     @route("aclswitch", _URL_POLICY_ASSIGN, methods=["PUT"])
     def put_policy_assign(self, req, **kwargs):
-        pass
+        try:
+            policy_assign_req = json.loads(req.body)
+        except ValueError:
+            return Response(status=400, body="Unable to parse JSON.")
+        result = self._api.policy_assign_switch(policy_assign_req[
+                                                    "switch_id"],
+                                                policy_assign_req[
+                                                    "policy"])
+        print(result)
+        # TODO send success response
 
     @route("aclswitch", _URL_POLICY_ASSIGN, methods=["DELETE"])
-    def delete_policy_assign(self, req, **kwargs):
-        pass
+    def delete_policy_revoke(self, req, **kwargs):
+        try:
+            policy_revoke_req = json.loads(req.body)
+        except ValueError:
+            return Response(status=400, body="Unable to parse JSON.")
+        result = self._api.policy_revoke_switch(policy_revoke_req[
+                                                    "switch_id"],
+                                                policy_revoke_req[
+                                                    "policy"])
+        # TODO send success response
 
 

@@ -78,30 +78,56 @@ class ACLSwitchAPI:
         else:
             return ReturnStatus.POLICY_EXISTS
 
-    def policy_remove(self):
-        pass
+    def policy_remove(self, policy):
+        """Remove a policy domain.
 
-    def policy_assign(self):
-        pass
+        :param policy: Name of the policy domain.
+        :return: Result of the operation.
+        """
+        if len(self._pol_man.policy_get_rules(policy)) > 0:
+            return ReturnStatus.POLICY_NOT_EMPTY
+        if self._pol_man.policy_remove(policy):
+            return ReturnStatus.POLICY_REMOVED
+        else:
+            return ReturnStatus.POLICY_NOT_EXISTS
 
-    def policy_revoke(self):
-        pass
-
-    def policy_add_switch(self, switch_id, policies):
-        """Inform the policy manager that a switch has connected to
-        the network.
+    def policy_assign_switch(self, switch_id, policy):
+        """Assign a policy to a switch.
 
         :param switch_id: Switch identifier, typically the datapath ID.
-        :param policies: List of policies to assign to the switch.
+        :param policy: Name of the policy to assign.
         """
-        self._pol_man.switch_add(switch_id, policies)
-        rule_ids = []
-        for policy in policies:
-            rule_ids = rule_ids + self._pol_man.policy_get_rules(policy)
+        # TODO check if policy exists
+        # TODO check if the assignment has already been made
+        self._pol_man.switch_assign_policy(switch_id, policy)
+        rule_ids = self._pol_man.policy_get_rules(policy)
         rules = []
         for r_id in rule_ids:
             rules.append(self.acl_get_rule(r_id))
         self._flow_man.flow_deploy_multiple_rules(switch_id, rules)
+
+    def policy_revoke_switch(self, switch_id, policy):
+        """Revoke a policy assignment from a switch.
+
+        :param switch_id: Switch identifier, typically the datapath ID.
+        :param policy: Policy to revoke.
+        """
+        # TODO check if policy exists
+        # TODO check if the switch has the assignment
+        self._pol_man.switch_revoke_policy(switch_id, policy)
+        rule_ids = self._pol_man.policy_get_rules(policy)
+        rules = []
+        for r_id in rule_ids:
+            rules.append(self.acl_get_rule(r_id))
+        self._flow_man.flow_remove_multiple_rules(switch_id, rules)
+
+    def switch_connect(self, switch_id):
+        """A switch has connected to the network, inform the policy
+        manager.
+
+        :param switch_id:
+        """
+        self._pol_man.switch_connect(switch_id)
 
 class ReturnStatus:
     """Enums for function return statuses.
@@ -110,9 +136,9 @@ class ReturnStatus:
     POLICY_NOT_EXISTS = 11
     POLICY_CREATED = 12
     POLICY_REMOVED = 13
+    POLICY_NOT_EMPTY = 14
     RULE_EXISTS = 20
     RULE_NOT_EXISTS = 21
     RULE_CREATED = 22
     RULE_REMOVED = 23
     RULE_SYNTAX_INVALID = 24
-
