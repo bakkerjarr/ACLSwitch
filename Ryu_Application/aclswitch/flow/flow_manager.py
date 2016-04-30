@@ -2,6 +2,7 @@
 from ryu.ofproto import ofproto_v1_3
 
 # Modules
+import logging
 
 __author__ = "Jarrod N. Bakker"
 __status__ = "Development"
@@ -15,14 +16,17 @@ class FlowManager:
     # Note that for a priority p, 0 <= p <= MAX (i.e. 65535)
     OFP_MAX_PRIORITY = ofproto_v1_3.OFP_DEFAULT_PRIORITY * 2 - 1
 
-    def __init__(self, aclswitch, logging):
+    def __init__(self, aclswitch, logging_config):
         """Initialise the FlowManager object.
 
         :param aclswitch: ACLSwitch object.
-        :param logging: ACLSWitch logging object.
+        :param logging_config: Logging configuration dict.
         """
         self._aclswitch = aclswitch
-        self._logging = logging
+        self._logging = logging.getLogger(__name__)
+        self._logging.setLevel(logging_config["min_lvl"])
+        self._logging.propagate = logging_config["propagate"]
+        self._logging.addHandler(logging_config["handler"])
         self._logging.info("Initialising ACLManager...")
 
     def flow_deploy_multiple_rules(self, switch_id, rules):

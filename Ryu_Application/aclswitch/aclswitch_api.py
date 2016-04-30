@@ -3,6 +3,7 @@ from acl.acl_manager import ACLManager
 from policy.policy_manager import PolicyManager
 
 # Module imports
+import logging
 
 __author__ = "Jarrod N. Bakker"
 __status__ = "Development"
@@ -12,17 +13,20 @@ class ACLSwitchAPI:
     """API for modifying and viewing the state of ACLSwitch.
     """
 
-    def __init__(self, logging, flow_man):
+    def __init__(self, logging_config, flow_man):
         """Initialise the API class.
 
-        :param logging: ACLSWitch logging object.
+        :param logging_config: Logging configuration dict.
         :param flow_man: FlowManager object.
         """
-        self._logging = logging
+        self._logging = logging.getLogger(__name__)
+        self._logging.setLevel(logging_config["min_lvl"])
+        self._logging.propagate = logging_config["propagate"]
+        self._logging.addHandler(logging_config["handler"])
         self._logging.info("Initialising API...")
         self._flow_man = flow_man
-        self._acl_man = ACLManager(self._logging)
-        self._pol_man = PolicyManager(self._logging)
+        self._acl_man = ACLManager(logging_config)
+        self._pol_man = PolicyManager(logging_config)
 
     def acl_create_rule(self, rule):
         """Create an ACL rule.
@@ -31,17 +35,21 @@ class ACLSwitchAPI:
         :return: Result of the operation.
         """
         if not self._pol_man.policy_exists(rule["policy"]):
+            self._logging.warning("Policy %s does not exist",
+                                  rule["policy"])
             return ReturnStatus.POLICY_NOT_EXISTS
         if not self._acl_man.acl_rule_syntax_check(rule):
+            self._logging.warning("Invalid rule syntax: %s", rule)
             return ReturnStatus.RULE_SYNTAX_INVALID
         rule_id = self._acl_man.acl_add_rule(rule)
         if rule_id is None:
+            self._logging.warning("Rule already exists: %s", rule)
             return ReturnStatus.RULE_EXISTS
         self._pol_man.policy_add_rule(rule["policy"], rule_id)
         switches = self._pol_man.policy_get_switches(rule["policy"])
         self._flow_man.flow_deploy_single_rule(self.acl_get_rule(
             rule_id), switches)
-        print("\nRule created with id: {0}\n".format(rule_id))
+        self._logging.info("ACL rule created with id: %s", rule_id)
         return ReturnStatus.RULE_CREATED
 
     def acl_remove_rule(self, rule_id):
@@ -74,6 +82,7 @@ class ACLSwitchAPI:
         :return: Result of the operation.
         """
         if self._pol_man.policy_create(policy):
+            self._logging.debug("Created policy: %s", policy)
             return ReturnStatus.POLICY_CREATED
         else:
             return ReturnStatus.POLICY_EXISTS

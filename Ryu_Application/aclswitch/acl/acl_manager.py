@@ -4,6 +4,7 @@ from acl_rule_syntax import ACLRuleSyntax
 # Other modules
 from collections import namedtuple
 from netaddr import IPAddress  # TODO Add to dependency list
+import logging
 
 __author__ = "Jarrod N. Bakker"
 __status__ = "Development"
@@ -18,12 +19,15 @@ class ACLManager:
                            "port_dst policy time_start time_duration")
     WILDCARD = "*"
 
-    def __init__(self, logging):
+    def __init__(self, logging_config):
         """Initialise the ACLManager object.
 
-        :param logging: ACLSWitch logging object.
+        :param logging_config: Logging configuration dict.
         """
-        self._logging = logging
+        self._logging = logging.getLogger(__name__)
+        self._logging.setLevel(logging_config["min_lvl"])
+        self._logging.propagate = logging_config["propagate"]
+        self._logging.addHandler(logging_config["handler"])
         self._logging.info("Initialising ACLManager...")
         self._rule_syntax = ACLRuleSyntax()
         self._acl_id_count = 0

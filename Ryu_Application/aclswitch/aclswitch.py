@@ -51,13 +51,14 @@ from ryu.ofproto import ofproto_v1_3_parser as ofp13_parser
 from abc_ryu_app import ABCRyuApp
 from aclswitch_api import ACLSwitchAPI
 from aclswitch_api import ReturnStatus
-from aclswitch_logging import ACLSwitchLogging
+from config_loader import ConfigLoader
 from flow.flow_manager import FlowManager
 from rest_wsgi import ACLSwitchREST
 
 # Other modules
 from netaddr import IPAddress  # TODO Does Ryu have a friendly packet library
 import json
+import logging
 import os
 
 __author__ = "Jarrod N. Bakker"
@@ -69,7 +70,8 @@ class ACLSwitch(ABCRyuApp):
     """
 
     _APP_NAME = "ACLSwitch"
-    _CONFIG_FILE_NAME = "config.json"
+    _CONFIG_POLICIES_FILE_NAME = "policies.json"
+    _CONFIG_RULE_FILE_NAME = "rules.json"
     _EXPECTED_HANDLERS = (EventOFPSwitchFeatures.__name__, )
     _INSTANCE_NAME_ASW_API = "asw_api"
     # Default priority is defined to be in the middle (0x8000 in 1.3)
@@ -82,76 +84,47 @@ class ACLSwitch(ABCRyuApp):
     # other app is, just what table is being used next in the pipeline.
     _TABLE_ID_L2 = 1
 
-
     def __init__(self, contr):
-        self._logging = ACLSwitchLogging()
+        # Load config
+        path_to_config = os.path.dirname(__file__) + "/config/"
+        self._config = ConfigLoader(path_to_config +
+                                    self._CONFIG_POLICIES_FILE_NAME,
+                                    path_to_config +
+                                     self._CONFIG_RULE_FILE_NAME)
+        # Set logging
+        logging_config = self._config.get_logging_config()
+        self._logging = logging.getLogger(__name__)
+        self._logging.setLevel(logging_config["min_lvl"])
+        self._logging.propagate = logging_config["propagate"]
+        self._logging.addHandler(logging_config["handler"])
+
         self._contr = contr
         self._supported = self._verify_contr_handlers()
         self._logging.info("Starting ACLSwitch...")
 
         # Create objects to manage different features
-        self._flow_man = FlowManager(self, self._logging)
-        self._api = ACLSwitchAPI(self._logging, self._flow_man)
+        self._flow_man = FlowManager(self, logging_config)
+        self._api = ACLSwitchAPI(logging_config, self._flow_man)
 
-        # Read config file
+        self._api.policy_create(self._POLICY_DEFAULT)
+
+        # Read config files
         # TODO Command line argument for custom location for config file
-        file_loc = (os.path.dirname(__file__) + "/" +
-                    self._CONFIG_FILE_NAME)
-        self._import_config_file(file_loc)
+        policies = self._config.load_policies()
+        rules = self._config.load_rules()
+        for pol in policies:
+            result = self._api.policy_create(pol)
+            self._logging.debug("Return code: %s", result)
+        for rule in rules:
+            result = self._api.acl_create_rule(rule)
+            self._logging.debug("Return code: %s", result)
 
         # Register REST WSGI through the controller app
         self._contr.register_rest_wsgi(ACLSwitchREST, kwargs=
                                        {self._INSTANCE_NAME_ASW_API:
                                         self._api})
 
-        self._logging.success("ACLSwitch started successfully.")
-
-    def _import_config_file(self, file_loc):
-        """Import ACLSwitch config from a JSON-formatted file.
-
-        :param file_loc: Path to the configuration file.
-        :return:
-        """
-        # check that file exists
-        # READ!
-        try:
-            # TODO use aclswitch_logging
-            buf_in = open(file_loc)
-            self._logging.info("Reading config from file: " + file_loc)
-            for line in buf_in:
-                if line[0] == "#" or not line.strip():
-                    continue  # Skip file comments and empty lines
-                try:
-                    config = json.loads(line)
-                except ValueError:
-                    self._logging.fail(line + " is not valid JSON.")
-                    continue
-                if "rule" in config:
-                    # TODO Change time-enforced rule syntax to overload normal rule syntax
-                    self._logging.info("Parsing rule: {0}".format(
-                        config["rule"]))
-                    result = self._api.acl_create_rule(config["rule"])
-                    # TODO Handle return codes from API
-                    self._logging.info("Return code: {0}".format(result))
-                    #if result[0] is True:
-                    #    self._logging.success("Rule created: {"
-                    #                          "0}".format(config[
-                    #
-                    # "rule"]))
-                    #else:
-                    #    self._logging.fail("Rule creation failed: {"
-                    #                       "0}".format(result[1]))
-                elif "policy" in config:
-                    self._logging.info("Parsing policy domain: {"
-                                       "0}".format(config["policy"]))
-                    result = self._api.policy_create(config["policy"])
-                    self._logging.info("Return code: {0}".format(result))
-                else:
-                    self._logging.fail(line + "is not recognised JSON.")
-            buf_in.close()
-        except IOError:
-            self._logging.fail("Unable to read from file: " +
-                               str(file_loc))
+        self._logging.info("ACLSwitch started successfully.")
 
     def add_blacklist_entry(self, switch_id, rule):
         """Add a rule to the blacklist flow table as a flow table entry.
@@ -298,7 +271,7 @@ class ACLSwitch(ABCRyuApp):
                          self._APP_NAME))
             for f in failures:
                 fail_msg += "\n\t- {0}".format(f)
-            self._logging.fail(fail_msg)
+            self._logging.critical(fail_msg)
             return False
         else:
             return True

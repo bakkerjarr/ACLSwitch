@@ -1,4 +1,5 @@
 # Module imports
+import logging
 
 __author__ = "Jarrod N. Bakker"
 __status__ = "Development"
@@ -9,12 +10,15 @@ class PolicyManager:
     """
     # TODO A number of these methods assume that the input is valid. Checks should be performed ideally.
 
-    def __init__(self, logging):
+    def __init__(self, logging_config):
         """Initialise the PolicyManager object.
 
-        :param logging: ACLSWitch logging object.
+        :param logging_config: Logging configuration dict.
         """
-        self._logging = logging
+        self._logging = logging.getLogger(__name__)
+        self._logging.setLevel(logging_config["min_lvl"])
+        self._logging.propagate = logging_config["propagate"]
+        self._logging.addHandler(logging_config["handler"])
         self._logging.info("Initialising PolicyManager...")
         # TODO change below to a  switch_id dict:set of policies
         self._connected_switches = {}  # switch_id_id:[policy]
