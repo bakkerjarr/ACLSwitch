@@ -142,6 +142,7 @@ class ACLSwitchAPI:
         else:
             return ReturnStatus.SWITCH_EXISTS
 
+
 class ReturnStatus:
     """Enums for function return statuses.
     """
