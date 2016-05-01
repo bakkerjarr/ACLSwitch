@@ -40,8 +40,10 @@ class ACLManager:
         :return: True is syntax is valid, False otherwise.
         """
         if len(self._rule_syntax.check_rule(rule)) > 0:
+            self._logging.warning("Invalid rule syntax: %s", rule)
             return False
         else:
+            self._logging.debug("Valid rule syntax: %s", rule)
             return True
 
     def acl_add_rule(self, rule):
@@ -62,10 +64,12 @@ class ACLManager:
                                   time_start=0,
                                   time_duration=0)
         if self._check_rule_exists(new_rule):
+            self._logging.warning("Rule already exists: %s", rule)
             return None
         rule_id = self._acl_id_count
         self._access_control_list[rule_id] = new_rule
         self._acl_id_count += 1  # Increment to keep IDs unique
+        self._logging.info("Rule %s created with id: %s", rule, rule_id)
         return rule_id
 
     def acl_remove_rule(self, rule_id):
@@ -78,6 +82,7 @@ class ACLManager:
         """
         rule = self.acl_get_rule(rule_id)
         del self._access_control_list[rule_id]
+        self._logging.info("Removed rule: %s", rule_id)
         return rule
 
     def acl_is_rule(self, rule_id):
@@ -89,7 +94,9 @@ class ACLManager:
         try:
             self._access_control_list[rule_id]
         except KeyError:
+            self._logging.warning("Rule %s does not exist.", rule_id)
             return False
+        self._logging.debug("Rule %s exists.", rule_id)
         return True
 
     def acl_get_rule(self, rule_id):
@@ -98,7 +105,9 @@ class ACLManager:
         :param rule_id: ID of a rule.
         :return: Named tuple of a rule.
         """
-        return self._access_control_list[rule_id]
+        rule = self._access_control_list[rule_id]
+        self._logging.debug("Rule %s: %s", rule_id, rule)
+        return rule
 
     def _ip_to_string(self, ip_addr):
         """Returns a string representation of an IP address.

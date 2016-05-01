@@ -39,6 +39,8 @@ class FlowManager:
         :param rules: List of rules to deploy.
         """
         for rule in rules:
+            self._logging.debug("Deploying rule %s to switch %s.",
+                                rule, switch_id)
             self._aclswitch.add_blacklist_entry(switch_id, rule)
 
     def flow_deploy_single_rule(self, rule, switches):
@@ -51,6 +53,8 @@ class FlowManager:
         :param switches: List of switches to send the rule to.
         """
         for switch_id in switches:
+            self._logging.debug("Deploying rule %s to switch %s.",
+                                rule, switch_id)
             self._aclswitch.add_blacklist_entry(switch_id, rule)
 
     def flow_remove_multiple_rules(self, switch_id, rules):
@@ -63,6 +67,8 @@ class FlowManager:
         :param rules: List of rules to remove.
         """
         for rule in rules:
+            self._logging.debug("Removing rule %s from switch %s.",
+                                rule, switch_id)
             self._aclswitch.remove_blacklist_entry(switch_id, rule)
 
     def flow_remove_single_rule(self, rule, switches):
@@ -75,4 +81,6 @@ class FlowManager:
         :param switches: List of switches to removed the rule from.
         """
         for switch_id in switches:
+            self._logging.debug("Removing rule %s from switch %s.",
+                                rule, switch_id)
             self._aclswitch.remove_blacklist_entry(switch_id, rule)

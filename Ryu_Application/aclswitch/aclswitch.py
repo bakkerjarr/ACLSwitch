@@ -50,14 +50,12 @@ from ryu.ofproto import ofproto_v1_3_parser as ofp13_parser
 # ACLSwitch modules
 from abc_ryu_app import ABCRyuApp
 from aclswitch_api import ACLSwitchAPI
-from aclswitch_api import ReturnStatus
 from config_loader import ConfigLoader
 from flow.flow_manager import FlowManager
 from rest_wsgi import ACLSwitchREST
 
 # Other modules
 from netaddr import IPAddress  # TODO Does Ryu have a friendly packet library
-import json
 import logging
 import os
 
@@ -78,10 +76,13 @@ class ACLSwitch(ABCRyuApp):
     # Note that for a priority p, 0 <= p <= MAX (i.e. 65535)
     _OFP_MAX_PRIORITY = ofproto_v1_3.OFP_DEFAULT_PRIORITY * 2 - 1
     _POLICY_DEFAULT = "default"
-    _TABLE_ID_ACL = 0
-    # The value below should be obtained through some kind of api call
-    # with the controller. ACLSwitch should have no idea what the
-    # other app is, just what table is being used next in the pipeline.
+    _RULE_TCP = "tcp"
+    _RULE_UDP = "udp"
+    _RULE_WILDCARD = "*"
+    # TODO Table IDs should be obtained from an application with higher knowledge.
+    # An api call to the controller. ACLSwitch should have no idea what
+    # what other apps have what table IDS, just what table to forward
+    # entries onto.
     _TABLE_ID_L2 = 1
 
     def __init__(self, contr):
@@ -113,11 +114,9 @@ class ACLSwitch(ABCRyuApp):
         policies = self._config.load_policies()
         rules = self._config.load_rules()
         for pol in policies:
-            result = self._api.policy_create(pol)
-            self._logging.debug("Return code: %s", result)
+            self._api.policy_create(pol)
         for rule in rules:
-            result = self._api.acl_create_rule(rule)
-            self._logging.debug("Return code: %s", result)
+            self._api.acl_create_rule(rule)
 
         # Register REST WSGI through the controller app
         self._contr.register_rest_wsgi(ACLSwitchREST, kwargs=
@@ -175,43 +174,43 @@ class ACLSwitch(ABCRyuApp):
             # Match IPv4
             match.append_field(ofproto_v1_3.OXM_OF_ETH_TYPE,
                                ethernet.ether.ETH_TYPE_IP)
-            if rule.ip_src != "*":
+            if rule.ip_src != self._RULE_WILDCARD:
                 match.append_field(ofproto_v1_3.OXM_OF_IPV4_SRC,
                                    int(IPAddress(rule.ip_src)))
-            if rule.ip_dst != "*":
+            if rule.ip_dst != self._RULE_WILDCARD:
                 match.append_field(ofproto_v1_3.OXM_OF_IPV4_DST,
                                    int(IPAddress(rule.ip_dst)))
         else:
             # Match IPv6
             match.append_field(ofproto_v1_3.OXM_OF_ETH_TYPE,
                                ethernet.ether.ETH_TYPE_IPV6)
-            if rule.ip_src != "*":
+            if rule.ip_src != self._RULE_WILDCARD:
                 match.append_field(ofproto_v1_3.OXM_OF_IPV6_SRC,
                                    IPAddress(rule.ip_src).words)
-            if rule.ip_dst != "*":
+            if rule.ip_dst != self._RULE_WILDCARD:
                 match.append_field(ofproto_v1_3.OXM_OF_IPV6_DST,
                                    IPAddress(rule.ip_dst).words)
 
         # Match transport layer (layer 4)
-        if rule.tp_proto != "*":
+        if rule.tp_proto != self._RULE_WILDCARD:
             if rule.tp_proto == "tcp":
                 # Match TCP
                 match.append_field(ofproto_v1_3.OXM_OF_IP_PROTO,
                                    ipv4.inet.IPPROTO_TCP)  # covers IPv6
-                if rule.port_src != "*":
+                if rule.port_src != self._RULE_WILDCARD:
                     match.append_field(ofproto_v1_3.OXM_OF_TCP_SRC,
                                        int(rule.port_src))
-                if rule.port_dst != "*":
+                if rule.port_dst != self._RULE_WILDCARD:
                     match.append_field(ofproto_v1_3.OXM_OF_TCP_DST,
                                        int(rule.port_dst))
             elif rule.tp_proto == "udp":
                 # Match UDP
                 match.append_field(ofproto_v1_3.OXM_OF_IP_PROTO,
                                    ipv4.inet.IPPROTO_UDP)  # covers IPv6
-                if rule.port_src != "*":
+                if rule.port_src != self._RULE_WILDCARD:
                     match.append_field(ofproto_v1_3.OXM_OF_UDP_SRC,
                                        int(rule.port_src))
-                if rule.port_dst != "*":
+                if rule.port_dst != self._RULE_WILDCARD:
                     match.append_field(ofproto_v1_3.OXM_OF_UDP_DST,
                                        int(rule.port_dst))
         return match
@@ -224,7 +223,7 @@ class ACLSwitch(ABCRyuApp):
         :param ip_dst: the destination IP address to check.
         :return: the IP version being used.
         """
-        if "*" not in ip_src:
+        if self._RULE_WILDCARD not in ip_src:
             return IPAddress(ip_src).version
         else:
             return IPAddress(ip_dst).version
@@ -241,7 +240,6 @@ class ACLSwitch(ABCRyuApp):
         # Install table-miss flow entry for the ACL flow table. No
         # buffer is used for this table-miss entry as matching flows
         # get passed onto the L2 switching flow table.
-        # TODO This should be managed by the ACLManager?
         match = parser.OFPMatch()
         inst = [parser.OFPInstructionGotoTable(self._TABLE_ID_L2)]
         self._contr.add_flow(datapath, 0, match, inst, 0,

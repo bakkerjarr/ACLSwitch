@@ -35,21 +35,16 @@ class ACLSwitchAPI:
         :return: Result of the operation.
         """
         if not self._pol_man.policy_exists(rule["policy"]):
-            self._logging.warning("Policy %s does not exist",
-                                  rule["policy"])
             return ReturnStatus.POLICY_NOT_EXISTS
         if not self._acl_man.acl_rule_syntax_check(rule):
-            self._logging.warning("Invalid rule syntax: %s", rule)
             return ReturnStatus.RULE_SYNTAX_INVALID
         rule_id = self._acl_man.acl_add_rule(rule)
         if rule_id is None:
-            self._logging.warning("Rule already exists: %s", rule)
             return ReturnStatus.RULE_EXISTS
         self._pol_man.policy_add_rule(rule["policy"], rule_id)
         switches = self._pol_man.policy_get_switches(rule["policy"])
         self._flow_man.flow_deploy_single_rule(self.acl_get_rule(
             rule_id), switches)
-        self._logging.info("ACL rule created with id: %s", rule_id)
         return ReturnStatus.RULE_CREATED
 
     def acl_remove_rule(self, rule_id):
@@ -72,7 +67,8 @@ class ACLSwitchAPI:
         :param rule_id: ID of a rule.
         :return: Named tuple of a rule.
         """
-        # TODO This method assumes that the rule_id is valid.
+        if not self._acl_man.acl_is_rule(rule_id):
+            return -1
         return self._acl_man.acl_get_rule(rule_id)
 
     def policy_create(self, policy):
@@ -82,7 +78,6 @@ class ACLSwitchAPI:
         :return: Result of the operation.
         """
         if self._pol_man.policy_create(policy):
-            self._logging.debug("Created policy: %s", policy)
             return ReturnStatus.POLICY_CREATED
         else:
             return ReturnStatus.POLICY_EXISTS
@@ -93,12 +88,12 @@ class ACLSwitchAPI:
         :param policy: Name of the policy domain.
         :return: Result of the operation.
         """
-        if len(self._pol_man.policy_get_rules(policy)) > 0:
-            return ReturnStatus.POLICY_NOT_EMPTY
-        if self._pol_man.policy_remove(policy):
-            return ReturnStatus.POLICY_REMOVED
-        else:
+        if not self._pol_man.policy_exists(policy):
             return ReturnStatus.POLICY_NOT_EXISTS
+        if not self._pol_man.policy_empty(policy):
+            return ReturnStatus.POLICY_NOT_EMPTY
+        self._pol_man.policy_remove(policy)
+        return ReturnStatus.POLICY_REMOVED
 
     def policy_assign_switch(self, switch_id, policy):
         """Assign a policy to a switch.
@@ -106,9 +101,12 @@ class ACLSwitchAPI:
         :param switch_id: Switch identifier, typically the datapath ID.
         :param policy: Name of the policy to assign.
         """
-        # TODO check if policy exists
-        # TODO check if the assignment has already been made
-        self._pol_man.switch_assign_policy(switch_id, policy)
+        if not self._pol_man.switch_exists(switch_id):
+            return ReturnStatus.SWITCH_NOT_EXISTS
+        if not self._pol_man.policy_exists(policy):
+            return ReturnStatus.POLICY_NOT_EXISTS
+        if not self._pol_man.switch_assign_policy(switch_id, policy):
+            return ReturnStatus.POLICY_ASSIGNED
         rule_ids = self._pol_man.policy_get_rules(policy)
         rules = []
         for r_id in rule_ids:
@@ -121,9 +119,12 @@ class ACLSwitchAPI:
         :param switch_id: Switch identifier, typically the datapath ID.
         :param policy: Policy to revoke.
         """
-        # TODO check if policy exists
-        # TODO check if the switch has the assignment
-        self._pol_man.switch_revoke_policy(switch_id, policy)
+        if not self._pol_man.switch_exists(switch_id):
+            return ReturnStatus.SWITCH_NOT_EXISTS
+        if not self._pol_man.policy_exists(policy):
+            return ReturnStatus.POLICY_NOT_EXISTS
+        if not self._pol_man.switch_revoke_policy(switch_id, policy):
+            return ReturnStatus.POLICY_NOT_ASSIGNED
         rule_ids = self._pol_man.policy_get_rules(policy)
         rules = []
         for r_id in rule_ids:
@@ -136,7 +137,10 @@ class ACLSwitchAPI:
 
         :param switch_id:
         """
-        self._pol_man.switch_connect(switch_id)
+        if self._pol_man.switch_connect(switch_id):
+            return ReturnStatus.SWITCH_CREATED
+        else:
+            return ReturnStatus.SWITCH_EXISTS
 
 class ReturnStatus:
     """Enums for function return statuses.
@@ -146,8 +150,13 @@ class ReturnStatus:
     POLICY_CREATED = 12
     POLICY_REMOVED = 13
     POLICY_NOT_EMPTY = 14
+    POLICY_ASSIGNED = 15
+    POLICY_NOT_ASSIGNED = 16
     RULE_EXISTS = 20
     RULE_NOT_EXISTS = 21
     RULE_CREATED = 22
     RULE_REMOVED = 23
     RULE_SYNTAX_INVALID = 24
+    SWITCH_EXISTS = 30
+    SWITCH_NOT_EXISTS = 31
+    SWITCH_CREATED = 32
