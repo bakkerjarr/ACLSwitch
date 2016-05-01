@@ -8,7 +8,6 @@ __status__ = "Development"
 class PolicyManager:
     """Class that manages policy domains.
     """
-    # TODO A number of these methods assume that the input is valid. Checks should be performed ideally.
 
     def __init__(self, logging_config):
         """Initialise the PolicyManager object.

@@ -91,7 +91,7 @@ class ACLSwitch(ABCRyuApp):
         self._config = ConfigLoader(path_to_config +
                                     self._CONFIG_POLICIES_FILE_NAME,
                                     path_to_config +
-                                     self._CONFIG_RULE_FILE_NAME)
+                                    self._CONFIG_RULE_FILE_NAME)
         # Set logging
         logging_config = self._config.get_logging_config()
         self._logging = logging.getLogger(__name__)
@@ -119,9 +119,8 @@ class ACLSwitch(ABCRyuApp):
             self._api.acl_create_rule(rule)
 
         # Register REST WSGI through the controller app
-        self._contr.register_rest_wsgi(ACLSwitchREST, kwargs=
-                                       {self._INSTANCE_NAME_ASW_API:
-                                        self._api})
+        self._contr.register_rest_wsgi(ACLSwitchREST, kwargs={
+            self._INSTANCE_NAME_ASW_API: self._api})
 
         self._logging.info("ACLSwitch started successfully.")
 
@@ -166,7 +165,6 @@ class ACLSwitch(ABCRyuApp):
         :param rule: The rule entry to create an OFPMatch instance from.
         :return: The OFPMatch instance.
         """
-        # TODO make "*" a constant
         match = ofp13_parser.OFPMatch()
         ip_version = self._return_ip_version(rule.ip_src, rule.ip_dst)
         # Match IP layer (layer 3)
@@ -193,7 +191,7 @@ class ACLSwitch(ABCRyuApp):
 
         # Match transport layer (layer 4)
         if rule.tp_proto != self._RULE_WILDCARD:
-            if rule.tp_proto == "tcp":
+            if rule.tp_proto == self._RULE_TCP:
                 # Match TCP
                 match.append_field(ofproto_v1_3.OXM_OF_IP_PROTO,
                                    ipv4.inet.IPPROTO_TCP)  # covers IPv6
@@ -203,7 +201,7 @@ class ACLSwitch(ABCRyuApp):
                 if rule.port_dst != self._RULE_WILDCARD:
                     match.append_field(ofproto_v1_3.OXM_OF_TCP_DST,
                                        int(rule.port_dst))
-            elif rule.tp_proto == "udp":
+            elif rule.tp_proto == self._RULE_UDP:
                 # Match UDP
                 match.append_field(ofproto_v1_3.OXM_OF_IP_PROTO,
                                    ipv4.inet.IPPROTO_UDP)  # covers IPv6

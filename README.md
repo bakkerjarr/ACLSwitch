@@ -19,19 +19,23 @@ found at https://github.com/bakkerjarr/ENGR489_2015_JarrodBakker.
 Software dependencies are noted down below along with the appropriate
 installation commands.
 ### Python
-- prettytable
+- netaddr
 ```bash
-$ pip install prettytable
-```
-- Scapy
-```bash
-$ pip install Scapy
+$ pip install netaddr
 ```
 - netifaces
 ```bash
 $ pip install netifaces
 ```
+- prettytable
+```bash
+$ pip install prettytable
+```
 - requests
 ```bash
 $ pip3 install requests
+```
+- Scapy
+```bash
+$ pip install Scapy
 ```

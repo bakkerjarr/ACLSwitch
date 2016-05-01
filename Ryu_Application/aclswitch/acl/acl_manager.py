@@ -3,7 +3,7 @@ from acl_rule_syntax import ACLRuleSyntax
 
 # Other modules
 from collections import namedtuple
-from netaddr import IPAddress  # TODO Add to dependency list
+from netaddr import IPAddress
 import logging
 
 __author__ = "Jarrod N. Bakker"
