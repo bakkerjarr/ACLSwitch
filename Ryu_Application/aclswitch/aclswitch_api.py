@@ -106,12 +106,13 @@ class ACLSwitchAPI:
         if not self._pol_man.policy_exists(policy):
             return ReturnStatus.POLICY_NOT_EXISTS
         if not self._pol_man.switch_assign_policy(switch_id, policy):
-            return ReturnStatus.POLICY_ASSIGNED
+            return ReturnStatus.POLICY_ALREADY_ASSIGNED
         rule_ids = self._pol_man.policy_get_rules(policy)
         rules = []
         for r_id in rule_ids:
             rules.append(self.acl_get_rule(r_id))
         self._flow_man.flow_deploy_multiple_rules(switch_id, rules)
+        return ReturnStatus.POLICY_ASSIGNED
 
     def policy_revoke_switch(self, switch_id, policy):
         """Revoke a policy assignment from a switch.
@@ -130,6 +131,7 @@ class ACLSwitchAPI:
         for r_id in rule_ids:
             rules.append(self.acl_get_rule(r_id))
         self._flow_man.flow_remove_multiple_rules(switch_id, rules)
+        return ReturnStatus.POLICY_REVOKED
 
     def switch_connect(self, switch_id):
         """A switch has connected to the network, inform the policy
@@ -153,6 +155,8 @@ class ReturnStatus:
     POLICY_NOT_EMPTY = 14
     POLICY_ASSIGNED = 15
     POLICY_NOT_ASSIGNED = 16
+    POLICY_ALREADY_ASSIGNED = 17
+    POLICY_REVOKED = 18
     RULE_EXISTS = 20
     RULE_NOT_EXISTS = 21
     RULE_CREATED = 22

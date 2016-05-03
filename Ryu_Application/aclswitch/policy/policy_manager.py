@@ -49,6 +49,10 @@ class PolicyManager:
             self._logging.warning("Cannot remove policy %s as it does "
                                   "not exist.", policy)
             return False
+        # We must revoke the policy from switches that have it assigned
+        for switch_id in self._connected_switches:
+            if policy in self._connected_switches[switch_id]:
+                self.switch_revoke_policy(switch_id, policy)
         del self._policy_to_rules[policy]
         self._logging.info("Removed policy: %s", policy)
         return True

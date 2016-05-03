@@ -6,6 +6,7 @@ from ryu.app.wsgi import ControllerBase
 from ryu.app.wsgi import route
 from webob import Response
 import json
+import time
 
 __author__ = "Jarrod N. Bakker"
 __status__ = "Development"
@@ -16,6 +17,12 @@ class ACLSwitchREST(ControllerBase):
     # Fields for kwargs
     _INSTANCE_NAME_CONTR = "ryu_controller_abstraction"
     _INSTANCE_NAME_ASW_API = "asw_api"
+    # Outgoing message templates
+    _MSG_CRITICAL = {"critical": ""}
+    _MSG_ERROR = {"error": ""}
+    _MSG_HB = {"heartbeat": ""}
+    _MSG_INFO = {"info": ""}
+    _MSG_WARNING = {"warning": ""}
     # URLs
     _URL = "/aclswitch"
     _URL_HEARTBEAT = _URL + "/heartbeat"
@@ -50,8 +57,10 @@ class ACLSwitchREST(ControllerBase):
         :return: A response with a simple message indicating the
         heartbeat.
         """
-        body = json.dumps({"msg": "heartbeat"})
-        return Response(content_type="application/json", body=body)
+        heartbeat = self._MSG_HB.copy()
+        heartbeat["heartbeat"] = time.ctime()
+        return Response(content_type="application/json",
+                        body=json.dumps(heartbeat))
 
     ######
     ### ACL endpoints
@@ -76,9 +85,11 @@ class ACLSwitchREST(ControllerBase):
         try:
             rule_req = json.loads(req.body)
         except ValueError:
-            return Response(status=400, body="Unable to parse JSON.")
-        result = self._api.acl_create_rule(rule_req["rule"])
-        # TODO send success response
+            error = self._MSG_ERROR.copy()
+            error["error"] = "Unable to parse JSON."
+            return Response(status=400, body=json.dumps(error))
+        return_status = self._api.acl_create_rule(rule_req["rule"])
+        return self._api_response(return_status)
 
     @route("aclswitch", _URL_ACL, methods=["DELETE"])
     def delete_acl(self, req, **kwargs):
@@ -90,8 +101,8 @@ class ACLSwitchREST(ControllerBase):
             rule_req = json.loads(req.body)
         except ValueError:
             return Response(status=400, body="Unable to parse JSON.")
-        rseult = self._api.acl_remove_rule(rule_req["rule_id"])
-        # TODO send success response
+        return_status = self._api.acl_remove_rule(rule_req["rule_id"])
+        return self._api_response(return_status)
 
     ######
     ### Policy endpoints
@@ -117,9 +128,8 @@ class ACLSwitchREST(ControllerBase):
             policy_req = json.loads(req.body)
         except ValueError:
             return Response(status=400, body="Unable to parse JSON.")
-        result = self._api.policy_create(policy_req["policy"])
-        print(result)
-        # TODO send success response
+        return_status = self._api.policy_create(policy_req["policy"])
+        return self._api_response(return_status)
 
     @route("aclswitch", _URL_POLICY, methods=["DELETE"])
     def delete_policy(self, req, **kwargs):
@@ -131,9 +141,8 @@ class ACLSwitchREST(ControllerBase):
             policy_req = json.loads(req.body)
         except ValueError:
             return Response(status=400, body="Unable to parse JSON.")
-        result = self._api.policy_remove(policy_req["policy"])
-        print(result)
-        # TODO send success response
+        return_status = self._api.policy_remove(policy_req["policy"])
+        return self._api_response(return_status)
 
     @route("aclswitch", _URL_POLICY_ASSIGN, methods=["PUT"])
     def put_policy_assign(self, req, **kwargs):
@@ -145,12 +154,9 @@ class ACLSwitchREST(ControllerBase):
             policy_assign_req = json.loads(req.body)
         except ValueError:
             return Response(status=400, body="Unable to parse JSON.")
-        result = self._api.policy_assign_switch(policy_assign_req[
-                                                    "switch_id"],
-                                                policy_assign_req[
-                                                    "policy"])
-        print(result)
-        # TODO send success response
+        return_status = self._api.policy_assign_switch(
+            policy_assign_req["switch_id"], policy_assign_req["policy"])
+        return self._api_response(return_status)
 
     @route("aclswitch", _URL_POLICY_ASSIGN, methods=["DELETE"])
     def delete_policy_revoke(self, req, **kwargs):
@@ -162,11 +168,9 @@ class ACLSwitchREST(ControllerBase):
             policy_revoke_req = json.loads(req.body)
         except ValueError:
             return Response(status=400, body="Unable to parse JSON.")
-        result = self._api.policy_revoke_switch(policy_revoke_req[
-                                                    "switch_id"],
-                                                policy_revoke_req[
-                                                    "policy"])
-        # TODO send success response
+        return_status = self._api.policy_revoke_switch(
+            policy_revoke_req["switch_id"], policy_revoke_req["policy"])
+        return self._api_response(return_status)
 
     ######
     ### Switch endpoints
@@ -183,3 +187,80 @@ class ACLSwitchREST(ControllerBase):
         # TODO Complete endpoint
         body = json.dumps("get_switches endpoint set.")
         return Response(content_type="application/json", body=body)
+
+    def _api_response(self, return_status):
+        """Put together a Response object for a given ReturnStatus code.
+
+        :param return_status: The ReturnStatus integer code.
+        :return: The Response object.
+        """
+        if return_status == ReturnStatus.POLICY_EXISTS:
+            status = 400
+            body = self._MSG_WARNING.copy()
+            body["warning"] = "The policy domain already exists."
+        elif return_status == ReturnStatus.POLICY_NOT_EXISTS:
+            status = 400
+            body = self._MSG_WARNING.copy()
+            body["warning"] = "The policy domain does not exist."
+        elif return_status == ReturnStatus.POLICY_CREATED:
+            status = 200
+            body = self._MSG_INFO.copy()
+            body["info"] = "Policy domain created."
+        elif return_status == ReturnStatus.POLICY_REMOVED:
+            status = 200
+            body = self._MSG_INFO.copy()
+            body["info"] = "Policy domain removed."
+        elif return_status == ReturnStatus.POLICY_NOT_EMPTY:
+            status = 400
+            body = self._MSG_WARNING.copy()
+            body["warning"] = "The policy domain cannot be removed as " \
+                              "it has rules associated with it."
+        elif return_status == ReturnStatus.POLICY_ASSIGNED:
+            status = 200
+            body = self._MSG_INFO.copy()
+            body["info"] = "Policy domain assigned to the switch."
+        elif return_status == ReturnStatus.POLICY_NOT_ASSIGNED:
+            status = 400
+            body = self._MSG_WARNING.copy()
+            body["warning"] = "The policy domain is not assigned to " \
+                              "the switch."
+        elif return_status == ReturnStatus.POLICY_ALREADY_ASSIGNED:
+            status = 400
+            body = self._MSG_WARNING.copy()
+            body["warning"] = "The policy domain is already assigned " \
+                              "to the switch."
+        elif return_status == ReturnStatus.POLICY_REVOKED:
+            status = 200
+            body = self._MSG_INFO.copy()
+            body["info"] = "Policy domain revoked from the switch."
+        elif return_status == ReturnStatus.RULE_EXISTS:
+            status = 400
+            body = self._MSG_WARNING.copy()
+            body["warning"] = "The ACL rule already exists."
+        elif return_status == ReturnStatus.RULE_NOT_EXISTS:
+            status = 400
+            body = self._MSG_WARNING.copy()
+            body["warning"] = "The ACL rule does not exists."
+        elif return_status == ReturnStatus.RULE_CREATED:
+            status = 200
+            body = self._MSG_INFO.copy()
+            body["info"] = "ACL rule created."
+        elif return_status == ReturnStatus.RULE_REMOVED:
+            status = 200
+            body = self._MSG_INFO.copy()
+            body["info"] = "ACL rule removed."
+        elif return_status == ReturnStatus.RULE_SYNTAX_INVALID:
+            status = 400
+            body = self._MSG_ERROR.copy()
+            body["error"] = "Incorrect ACL rule syntax."
+        elif return_status == ReturnStatus.SWITCH_NOT_EXISTS:
+            status = 400
+            body = self._MSG_WARNING.copy()
+            body["warning"] = "The switch does not exist."
+        else:
+            status = 500
+            body = self._MSG_CRITICAL.copy()
+            body["critical"] = "Unrecognised ReturnStatus passed. " \
+                               "Please contact an ACLSwitch developer " \
+                               "immediately."
+        return Response(status=status, body=json.dumps(body))

@@ -83,6 +83,7 @@ class ACLSwitch(ABCRyuApp):
     # An api call to the controller. ACLSwitch should have no idea what
     # what other apps have what table IDS, just what table to forward
     # entries onto.
+    _TABLE_ID_ACL = 0
     _TABLE_ID_L2 = 1
 
     def __init__(self, contr):
