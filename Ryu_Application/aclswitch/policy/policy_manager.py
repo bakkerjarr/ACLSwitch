@@ -194,3 +194,33 @@ class PolicyManager:
         self._logging.info("Policy %s revoked from switch %s", policy,
                            switch_id)
         return True
+
+    def get_all_policies(self):
+        """Fetch and return a dict of policies and the rules that are
+        associated with them.
+
+        :return: A dict of policies to a list of rule IDs.
+        """
+        return self._policy_to_rules
+
+    def get_all_switches(self):
+        """Fetch and return a dict of the IDs of connected switches
+        and the policies assigned to them.
+
+        :return: A dict of switch IDs to a list of policies.
+        """
+        return self._connected_switches
+
+    def get_num_policies(self):
+        """Return the number of policy domains.
+
+        :return: The number of policy domains as an int.
+        """
+        return len(self._policy_to_rules)
+
+    def get_num_switches(self):
+        """Return the number of connected switches.
+
+        :return: The number of connected switches as an int.
+        """
+        return len(self._connected_switches)

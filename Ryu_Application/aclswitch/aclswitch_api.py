@@ -144,6 +144,42 @@ class ACLSwitchAPI:
         else:
             return ReturnStatus.SWITCH_EXISTS
 
+    def get_aclswitch_info(self):
+        """Fetch and return a dict containing a summary of the state
+        of ACLSwitch.
+
+        :return: A dict containing some summary information.
+        """
+        num_rules = self._acl_man.get_num_rules()
+        num_policies = self._pol_man.get_num_policies()
+        num_switches = self._pol_man.get_num_switches()
+        return {"num_rules": num_rules, "num_policies": num_policies,
+                "num_switches": num_switches}
+
+    def get_all_policies(self):
+        """Fetch and return a dict of policies and the rules that are
+        associated with them.
+
+        :return: A dict of policies to a list of rule IDs.
+        """
+        return self._pol_man.get_all_policies()
+
+    def get_all_rules(self):
+        """Fetch and return a dict of ACL rule IDs to their respective
+        ACL rules.
+
+        :return: A dict of rules IDs to rules.
+        """
+        return self._acl_man.get_all_rules()
+
+    def get_all_switches(self):
+        """Fetch and return a dict of the IDs of connected switches
+        and the policies assigned to them.
+
+        :return: A dict of switch IDs to a list of policies.
+        """
+        return self._pol_man.get_all_switches()
+
 
 class ReturnStatus:
     """Enums for function return statuses.

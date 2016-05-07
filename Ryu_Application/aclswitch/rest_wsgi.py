@@ -47,8 +47,10 @@ class ACLSwitchREST(ControllerBase):
         :return: A response with a simple welcome message.
         """
         aclswitch_info = {"msg": "Welcome to the ACLSwitch REST WSGI."}
+        aclswitch_info.update(self._api.get_aclswitch_info())
         body = json.dumps(aclswitch_info)
-        return Response(content_type="application/json", body=body)
+        return Response(content_type="application/json", status=200,
+                        body=body)
 
     @route("aclswitch", _URL_HEARTBEAT, methods=["GET"])
     def heartbeat(self, req, **kwargs):
@@ -65,6 +67,7 @@ class ACLSwitchREST(ControllerBase):
     ######
     ### ACL endpoints
     ######
+
     @route("aclswitch", _URL_ACL, methods=["GET"])
     def get_acls(self, req, **kwargs):
         """Endpoint for fetching a list of all the ACL rules.
@@ -72,9 +75,10 @@ class ACLSwitchREST(ControllerBase):
         :return: A response containing a JSON formatted list of all
         ACL rules.
         """
-        # TODO Complete endpoint
-        body = json.dumps("get_acls endpoint set.")
-        return Response(content_type="application/json", body=body)
+        body = self._MSG_INFO.copy()
+        body["info"] = self._api.get_all_rules()
+        return Response(content_type="application/json", status=200,
+                        body=json.dumps(body))
 
     @route("aclswitch", _URL_ACL, methods=["POST"])
     def post_acl(self, req, **kwargs):
@@ -107,6 +111,7 @@ class ACLSwitchREST(ControllerBase):
     ######
     ### Policy endpoints
     ######
+
     @route("aclswitch", _URL_POLICY, methods=["GET"])
     def get_policies(self, req, **kwargs):
         """Endpoint for fetching a list of all the policies.
@@ -114,9 +119,10 @@ class ACLSwitchREST(ControllerBase):
         :return: A response containing a JSON formatted list of all
         policies and the rule IDs associated with each policy.
         """
-        # TODO Complete endpoint
-        body = json.dumps("get_policies endpoint set.")
-        return Response(content_type="application/json", body=body)
+        body = self._MSG_INFO.copy()
+        body["info"] = self._api.get_all_policies()
+        return Response(content_type="application/json", status=200,
+                        body=json.dumps(body))
 
     @route("aclswitch", _URL_POLICY, methods=["POST"])
     def post_policy(self, req, **kwargs):
@@ -175,6 +181,7 @@ class ACLSwitchREST(ControllerBase):
     ######
     ### Switch endpoints
     ######
+
     @route("aclswitch", _URL_SWITCH, methods=["GET"])
     def get_switches(self, req, **kwargs):
         """Endpoint for fetching a list of all currently connected
@@ -184,9 +191,14 @@ class ACLSwitchREST(ControllerBase):
         currently connected switches and the policy domains assigned
         to each switch.
         """
-        # TODO Complete endpoint
-        body = json.dumps("get_switches endpoint set.")
-        return Response(content_type="application/json", body=body)
+        body = self._MSG_INFO.copy()
+        body["info"] = self._api.get_all_switches()
+        return Response(content_type="application/json", status=200,
+                        body=json.dumps(body))
+
+    ######
+    ### Helper functions
+    ######
 
     def _api_response(self, return_status):
         """Put together a Response object for a given ReturnStatus code.
@@ -263,4 +275,5 @@ class ACLSwitchREST(ControllerBase):
             body["critical"] = "Unrecognised ReturnStatus passed. " \
                                "Please contact an ACLSwitch developer " \
                                "immediately."
-        return Response(status=status, body=json.dumps(body))
+        return Response(content_type="application/json", status=status,
+                        body=json.dumps(body))

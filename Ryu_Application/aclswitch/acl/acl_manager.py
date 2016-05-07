@@ -109,6 +109,21 @@ class ACLManager:
         self._logging.debug("Rule %s: %s", rule_id, rule)
         return rule
 
+    def get_all_rules(self):
+        """Fetch and return a dict of ACL rule IDs to their respective
+        ACL rules.
+
+        :return: A dict of rules IDs to rules.
+        """
+        return self._access_control_list
+
+    def get_num_rules(self):
+        """Return the number of ACL rules.
+
+        :return: The number of ACL rules as an int.
+        """
+        return len(self._access_control_list)
+
     def _ip_to_string(self, ip_addr):
         """Returns a string representation of an IP address.
 
