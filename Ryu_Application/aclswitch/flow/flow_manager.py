@@ -27,7 +27,7 @@ class FlowManager:
         self._logging.setLevel(logging_config["min_lvl"])
         self._logging.propagate = logging_config["propagate"]
         self._logging.addHandler(logging_config["handler"])
-        self._logging.info("Initialising ACLManager...")
+        self._logging.info("Initialising FlowManager...")
 
     def flow_deploy_multiple_rules(self, switch_id, rules):
         """Deploy a multiple ACL rules out to a single switch.
