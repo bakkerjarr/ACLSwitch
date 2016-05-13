@@ -31,6 +31,9 @@ import json
 # Global fields needed for REST linkage
 acl_switch_instance_name = "acl_switch_app"
 url = "/acl_switch"
+TABLE_ID_BLACKLIST = 0
+TABLE_ID_WHITELIST = 1
+TABLE_ID_L2 = 2
 
 class ACLSwitchREST(ControllerBase):
 
@@ -180,8 +183,11 @@ class ACLSwitchREST(ControllerBase):
     """
     @route("acl_switch", url+"/acl_rules", methods=["POST"])
     def acl_rule_add(self, req, **kwargs):
+        print(str(json.loads(req.body)))
+        print("Adding a new rule in the API")
         try:
             ruleReq = json.loads(req.body)
+
         except:
             return Response(status=400, body="Unable to parse JSON.")
         if not self.check_rule_json(ruleReq):
@@ -191,7 +197,9 @@ class ACLSwitchREST(ControllerBase):
                                                    ruleReq["tp_proto"],
                                                    ruleReq["port_src"],
                                                    ruleReq["port_dst"],
-                                                   ruleReq["policy"])
+                                                   ruleReq["policy"],
+                                                   ruleReq["dst_list"])
+        print("Rule request in API is: " + str(req.body))
         if result[0] == False:
             return Response(status=400, body=result[1])
         return Response(status=200, body=result[1])
@@ -203,6 +211,7 @@ class ACLSwitchREST(ControllerBase):
     def acl_rule_add_time(self, req, ** kwargs):
         try:
             ruleReq = json.loads(req.body)
+            print("Adding rule in API with body: " + str(req.body))
         except:
             return Response(status=400, body="Unable to parse JSON.")
         if not self.check_rule_time_json(ruleReq):
@@ -215,6 +224,7 @@ class ACLSwitchREST(ControllerBase):
                                                    ruleReq["policy"],
                                                    ruleReq["time_start"],
                                                    ruleReq["time_duration"])
+        print("Rule request in API is: " + str(req.body))
         if result[0] == False:
             return Response(status=400, body=result[1])
         return Response(status=200, body=result[1])
@@ -243,7 +253,7 @@ class ACLSwitchREST(ControllerBase):
     @return - True if ruleJSON is valid, False otherwise.
     """
     def check_rule_json(self, ruleJSON):
-        if len(ruleJSON) != 6:
+        if len(ruleJSON) != 7:
             return False
         if not "ip_src" in ruleJSON:
             return False
@@ -260,7 +270,7 @@ class ACLSwitchREST(ControllerBase):
         return True # everything is looking good!
 
     """
-    Check that incoming JSON for an ACL has the required 6 fields:
+    Check that incoming JSON for an ACL has the required 8 fields:
     "ip_src", "ip_dst", "tp_proto", "port_src", "port_dst", "policy",
     "time_start" and "time_duration".
     
@@ -268,7 +278,7 @@ class ACLSwitchREST(ControllerBase):
     @return - True if ruleJSON is valid, False otherwise.
     """
     def check_rule_time_json(self, ruleJSON):
-        if len(ruleJSON) != 8:
+        if len(ruleJSON) != 9:
             return False
         if not "ip_src" in ruleJSON:
             return False
@@ -282,9 +292,37 @@ class ACLSwitchREST(ControllerBase):
             return False
         if not "policy" in ruleJSON:
             return False
+        if not "dst_list" in ruleJSON:
+            return False
         if not "time_start" in ruleJSON:
             return False
         if not "time_duration" in ruleJSON:
             return False
         return True # everything is looking good!
 
+    """
+    Check that incoming JSON for a blacklist or whitelist ACL rule has the required 7 fields:
+    "ip_src", "ip_dst", "tp_proto", "port_src", "port_dst", "policy" and "list"
+
+    @param ruleJSON - input from the client to check.
+    @return - True if ruleJSON is valid, False otherwise.
+    """
+
+    def check_rule_time_json(self, ruleJSON):
+        if len(ruleJSON) != 7:
+	    return False
+        if not "ip_src" in ruleJSON:
+	    return False
+        if not "ip_dst" in ruleJSON:
+	    return False
+        if not "tp_proto" in ruleJSON:
+	    return False
+        if not "port_src" in ruleJSON:
+	    return False
+        if not "port_dst" in ruleJSON:
+	    return False
+        if not "policy" in ruleJSON:
+	    return False
+        if not "list" in ruleJSON:
+	    return False
+        return True # everything is looking good!
