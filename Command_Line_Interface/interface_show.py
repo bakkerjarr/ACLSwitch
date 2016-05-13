@@ -85,13 +85,13 @@ class ACLInterfaceShow:
         acl_keys = sorted(acl, key=lambda a: int(a))
         table = PrettyTable(["Rule ID", "Source Address",
                              "Destination Address", "Transport Protocol",
-                             "Source Port", "Destination Port", "Policy",
+                             "Source Port", "Destination Port", "Policy", "Table",
                              "Start Time", "Duration(min)"])
         for key in acl_keys:
             rule = acl[key]
             table.add_row([rule["rule_id"], rule["ip_src"], rule["ip_dst"],
                            rule["tp_proto"], rule["port_src"],
-                           rule["port_dst"], rule["policy"],
+                           rule["port_dst"], rule["policy"], rule["dst_list"],
                            rule["time_start"], rule["time_duration"]])
         print table
 

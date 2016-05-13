@@ -32,6 +32,11 @@ import json
 import requests
 import rule_syntax
 
+TABLE_ID_BLACKLIST = 0
+TABLE_ID_WHITELIST = 1
+TABLE_ID_L2 = 2
+
+
 class ACLInterfaceRule:
 
     # Constants
@@ -39,6 +44,7 @@ class ACLInterfaceRule:
     PROMPT_RULE_ADD = "ACL Switch (rule -> add) > "
     PROMPT_RULE_REMOVE = "ACL Switch (rule -> remove) > "
     PROMPT_RULE_TIME = "ACL Switch (rule -> time) > "
+    PROMPT_RULE_LIST = "ACLE Switch (rule -> dst_list) > "
     TEXT_ERROR_SYNTAX = ("ERROR: Incorrect syntax, could not process"
                         "  given command.")
     TEXT_ERROR_SYNTAX_TIME_START = ("ERROR: Incorrect syntax, given"
@@ -47,13 +53,15 @@ class ACLInterfaceRule:
                                       " duration not between 1-1092min.")
     TEXT_ERROR_CONNECTION = ("ERROR: Unable to establish a connection"
                             "  with ACLSwitch.")
-    TEXT_HELP_RULE = "\tadd, remove OR time"
+    TEXT_HELP_RULE = "\tadd, remove, rule_list OR time"
     TEXT_HELP_RULE_ADD = ("\tRule to add: ip_src ip_dst transport_protocol"
                          " port_src port_dst policy")
     TEXT_HELP_RULE_REMOVE = "\tRule to remove: rule_id"
     TEXT_HELP_RULE_TIME = ("\tRule to add: ip_src ip_dst transport_protocol"
                           " port_src port_dst policy time_start(e.g. 13:45)"
                           " duration(mins)")
+    TEX_HELP_RULE_LIST = ("\tRule to add: ip_src ip_dst transport_protocol"
+                         " port_src port_dst policy rule_dst_list")
     TIME_MAX_MINUTES = 1092
     TIME_MIN_MINUTES = 1
     URL_ACLSWITCH_RULE = "http://127.0.0.1:8080/acl_switch/acl_rules" # using loopback
@@ -73,6 +81,8 @@ class ACLInterfaceRule:
             self.rule_remove()
         elif buf_in == "time":
             self.rule_time()
+        elif buf_in == "rule_list":
+            self.rule_dst_list()
         else:
             print(self.TEXT_ERROR_SYNTAX + "\n" + self.TEXT_HELP_RULE) # syntax error
             
@@ -87,7 +97,7 @@ class ACLInterfaceRule:
     @param policy - policy to be encoded
     @return - JSON representation of the rule
     """
-    def rule_to_json(self, ip_src, ip_dst, tp_proto, port_src, port_dst, policy):
+    def rule_to_json(self, ip_src, ip_dst, tp_proto, port_src, port_dst, policy, dst_list = TABLE_ID_BLACKLIST):
        rule_dict = {}
        rule_dict["ip_src"] = ip_src
        rule_dict["ip_dst"] = ip_dst
@@ -95,7 +105,47 @@ class ACLInterfaceRule:
        rule_dict["port_src"] = port_src
        rule_dict["port_dst"] = port_dst
        rule_dict["policy"] = policy
+       rule_dict["dst_list"] = dst_list
+       print("rule_to_json")
        return json.dumps(rule_dict)
+
+    def rule_dst_list(self):
+        print self.TEX_HELP_RULE_LIST
+        buf_in = raw_input(self.PROMPT_RULE_LIST)
+        items = buf_in.split(" ")
+
+        if len(items) != 7:
+            print "Expected 7 arguments, " + str(len(items)) + " given."
+            return
+        items[2] = items[2].lower()
+        errors = rule_syntax.check_rule(items[0], items[1], items[2],
+                                        items[3], items[4])
+        DSTLIST = 0
+        if (items[6] == "whitelist"):
+            items[6] = TABLE_ID_WHITELIST
+        elif (items[6] == "blacklist"):
+            items[6] = TABLE_ID_BLACKLIST
+        else:
+            print("Invalid list specified")
+            return
+
+        if len(errors) != 0 :
+            print "Invalid rule provided:"
+            for e in errors:
+                print "\t" + e
+            return
+        add_req = self.rule_to_json(items[0], items[1], items[2],
+                                    items[3], items[4], items[5],
+                                    items[6])
+        try:
+            resp = requests.post(self.URL_ACLSWITCH_RULE, data=add_req,
+                                headers = {"Content-type": "application/json"})
+        except:
+            print self.TEXT_ERROR_CONNECTION
+            return
+        if resp.status_code != 200:
+            print("Error creating resource, HTTP " + str(resp.status_code))
+        print resp.text
 
     """
     The user is invited to input fields for an ACL rule. The rule is
@@ -105,6 +155,7 @@ class ACLInterfaceRule:
         print self.TEXT_HELP_RULE_ADD
         buf_in = raw_input(self.PROMPT_RULE_ADD)
         items = buf_in.split(" ")
+
         if len(items) != 6:
             print "Expected 6 arguments, " + str(len(items)) + " given."
             return
@@ -121,6 +172,7 @@ class ACLInterfaceRule:
         try:
             resp = requests.post(self.URL_ACLSWITCH_RULE, data=add_req,
                                 headers = {"Content-type": "application/json"})
+            print("adding request" + add_req)
         except:
             print self.TEXT_ERROR_CONNECTION
             return
