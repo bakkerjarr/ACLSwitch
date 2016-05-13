@@ -75,11 +75,11 @@ acl_switch_instance_name = "acl_switch_app"
 
 class ACLSwitch(app_manager.RyuApp):
     # Constants
-    ACL_ENTRY = namedtuple("ACL_ENTRY", "port_dst policy dst_list "
-                                        "time_start time_duration")
+    ACL_ENTRY = namedtuple("ACL_ENTRY",
+                           "ip_src ip_dst tp_proto port_src port_dst "
+                           "policy dst_list time_start time_duration")
     CONFIG_FILENAME = "/home/ubuntu/ACLSwitch/Ryu_Application/" \
                       "config.json"
-
     OFP_VERSIONS = [ofproto_v1_3.OFP_VERSION]
     OFP_MAX_PRIORITY = ofproto_v1_3.OFP_DEFAULT_PRIORITY * 2 - 1
     # Default priority is defined to be in the middle (0x8000 in 1.3)
