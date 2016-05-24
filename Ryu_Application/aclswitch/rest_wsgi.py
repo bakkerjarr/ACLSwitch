@@ -36,6 +36,8 @@ class ACLSwitchREST(ControllerBase):
         self._acl_switch_inst = data[self._INSTANCE_NAME_CONTR]
         self._api = data[self._INSTANCE_NAME_ASW_API]
 
+    # TODO need to handle cases where the client sends JSON that we don't recognise.
+
     ######
     ### General ACLSwitch endpoints
     ######

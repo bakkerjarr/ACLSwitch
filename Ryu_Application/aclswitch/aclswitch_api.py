@@ -43,8 +43,8 @@ class ACLSwitchAPI:
             return ReturnStatus.RULE_EXISTS
         self._pol_man.policy_add_rule(rule["policy"], rule_id)
         switches = self._pol_man.policy_get_switches(rule["policy"])
-        self._flow_man.flow_deploy_single_rule(self.acl_get_rule(
-            rule_id), switches)
+        self._flow_man.flow_deploy_single_rule(
+            self.acl_get_rule(rule_id), switches)
         return ReturnStatus.RULE_CREATED
 
     def acl_remove_rule(self, rule_id):
@@ -150,11 +150,9 @@ class ACLSwitchAPI:
 
         :return: A dict containing some summary information.
         """
-        num_rules = self._acl_man.get_num_rules()
-        num_policies = self._pol_man.get_num_policies()
-        num_switches = self._pol_man.get_num_switches()
-        return {"num_rules": num_rules, "num_policies": num_policies,
-                "num_switches": num_switches}
+        return {"num_rules": self._acl_man.get_num_rules(),
+                "num_policies": self._pol_man.get_num_policies(),
+                "num_switches": self._pol_man.get_num_switches()}
 
     def get_all_policies(self):
         """Fetch and return a dict of policies and the rules that are
@@ -168,9 +166,9 @@ class ACLSwitchAPI:
         """Fetch and return a dict of ACL rule IDs to their respective
         ACL rules.
 
-        :return: A dict of rules IDs to rules.
+        :return: A dict containing all ACL rules.
         """
-        return self._acl_man.get_all_rules()
+        return {"acl": self._acl_man.get_all_rules()}
 
     def get_all_switches(self):
         """Fetch and return a dict of the IDs of connected switches

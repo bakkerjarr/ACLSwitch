@@ -41,7 +41,7 @@ class FlowManager:
         for rule in rules:
             self._logging.debug("Deploying rule %s to switch %s.",
                                 rule, switch_id)
-            self._aclswitch.add_blacklist_entry(switch_id, rule)
+            self._aclswitch.add_acl_fte(switch_id, rule)
 
     def flow_deploy_single_rule(self, rule, switches):
         """Deploy a single ACL rule out to a group of switches.
@@ -55,7 +55,7 @@ class FlowManager:
         for switch_id in switches:
             self._logging.debug("Deploying rule %s to switch %s.",
                                 rule, switch_id)
-            self._aclswitch.add_blacklist_entry(switch_id, rule)
+            self._aclswitch.add_acl_fte(switch_id, rule)
 
     def flow_remove_multiple_rules(self, switch_id, rules):
         """Remove multiple rules from a single switch.
@@ -69,7 +69,7 @@ class FlowManager:
         for rule in rules:
             self._logging.debug("Removing rule %s from switch %s.",
                                 rule, switch_id)
-            self._aclswitch.remove_blacklist_entry(switch_id, rule)
+            self._aclswitch.remove_acl_fte(switch_id, rule)
 
     def flow_remove_single_rule(self, rule, switches):
         """Remove a single ACL rule from a group of switches.
@@ -83,4 +83,4 @@ class FlowManager:
         for switch_id in switches:
             self._logging.debug("Removing rule %s from switch %s.",
                                 rule, switch_id)
-            self._aclswitch.remove_blacklist_entry(switch_id, rule)
+            self._aclswitch.remove_acl_fte(switch_id, rule)

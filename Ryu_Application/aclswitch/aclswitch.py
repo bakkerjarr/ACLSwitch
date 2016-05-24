@@ -42,6 +42,7 @@
 
 # Ryu and OpenFlow modules
 from ryu.controller.ofp_event import EventOFPSwitchFeatures
+from ryu.lib.packet import arp
 from ryu.lib.packet import ethernet
 from ryu.lib.packet import ipv4
 from ryu.ofproto import ofproto_v1_3
@@ -83,8 +84,6 @@ class ACLSwitch(ABCRyuApp):
     # An api call to the controller. ACLSwitch should have no idea what
     # what other apps have what table IDS, just what table to forward
     # entries onto.
-    _TABLE_ID_ACL = 0
-    _TABLE_ID_L2 = 1
 
     def __init__(self, contr):
         # Load config
@@ -99,6 +98,11 @@ class ACLSwitch(ABCRyuApp):
         self._logging.setLevel(logging_config["min_lvl"])
         self._logging.propagate = logging_config["propagate"]
         self._logging.addHandler(logging_config["handler"])
+
+        # Set flow table numbers
+        self._table_id_blacklist = 0
+        self._table_id_whitelist = 1
+        self._table_id_next = 2
 
         self._contr = contr
         self._supported = self._verify_contr_handlers()
@@ -125,8 +129,8 @@ class ACLSwitch(ABCRyuApp):
 
         self._logging.info("ACLSwitch started successfully.")
 
-    def add_blacklist_entry(self, switch_id, rule):
-        """Add a rule to the blacklist flow table as a flow table entry.
+    def add_acl_fte(self, switch_id, rule):
+        """Add a rule to the flow table as a flow table entry.
 
         :param switch_id: The switch to add an entry to.
         :param rule: The rule to add.
@@ -135,15 +139,19 @@ class ACLSwitch(ABCRyuApp):
         ofproto = datapath.ofproto
         parser = datapath.ofproto_parser
         priority = self._OFP_MAX_PRIORITY
-        actions = []
+        if rule.action == "drop":
+            actions = []
+            inst = [parser.OFPInstructionActions(
+                ofproto.OFPIT_APPLY_ACTIONS, actions)]
+            table = self._table_id_blacklist
+        else:
+            inst = [parser.OFPInstructionGotoTable(self._table_id_next)]
+            table = self._table_id_whitelist
         match = self._create_match(rule)
-        inst = [parser.OFPInstructionActions(ofproto.OFPIT_APPLY_ACTIONS,
-                                             actions)]
-        self._contr.add_flow(datapath, priority, match, inst, 0,
-                             self._TABLE_ID_ACL)
+        self._contr.add_flow(datapath, priority, match, inst, 0, table)
 
-    def remove_blacklist_entry(self, switch_id, rule):
-        """Remove a blacklist flow table entry.
+    def remove_acl_fte(self, switch_id, rule):
+        """Remove a flow table entry.
 
         :param switch_id: The switch to remove the entry from.
         :param rule: The rule to remove.
@@ -234,15 +242,36 @@ class ACLSwitch(ABCRyuApp):
         """
         datapath = event.msg.datapath
         datapath_id = event.msg.datapath_id
+        ofproto = datapath.ofproto
         parser = datapath.ofproto_parser
 
-        # Install table-miss flow entry for the ACL flow table. No
-        # buffer is used for this table-miss entry as matching flows
-        # get passed onto the L2 switching flow table.
+        # Establish the flow table pipeline used by ACLSwitch. The
+        # first flow table represents a blacklist for dropping flows
+        # and the second flow table represents a whitelist for
+        # allowing flows. We must set the appropriate table miss
+        # entries and allow ARP traffic through the whitelist.
+
+        # Table miss entries
         match = parser.OFPMatch()
-        inst = [parser.OFPInstructionGotoTable(self._TABLE_ID_L2)]
+        inst = [parser.OFPInstructionGotoTable(self._table_id_whitelist)]
         self._contr.add_flow(datapath, 0, match, inst, 0,
-                             self._TABLE_ID_ACL)
+                             self._table_id_blacklist)
+        actions = []
+        inst = [parser.OFPInstructionActions(
+            ofproto.OFPIT_APPLY_ACTIONS, actions)]
+        self._contr.add_flow(datapath, 0, match, inst, 0,
+                             self._table_id_whitelist)
+        # ARP entries
+        inst = [parser.OFPInstructionGotoTable(self._table_id_next)]
+        match = parser.OFPMatch(arp_op=arp.ARP_REQUEST,
+                                eth_type=ethernet.ether.ETH_TYPE_ARP)
+        self._contr.add_flow(datapath, 1, match, inst, 0,
+                             self._table_id_whitelist)
+        match = parser.OFPMatch(arp_op=arp.ARP_REPLY,
+                                eth_type=ethernet.ether.ETH_TYPE_ARP)
+        self._contr.add_flow(datapath, 1, match, inst, 0,
+                             self._table_id_whitelist)
+
         # Take note of switches (via their datapaths IDs)
         self._api.switch_connect(datapath_id)
         self._api.policy_assign_switch(datapath_id, self._POLICY_DEFAULT)

@@ -19,10 +19,10 @@ class L2Switch(ABCRyuApp):
     _APP_NAME = "L2Switch"
     _EXPECTED_HANDLERS = (EventOFPPacketIn.__name__,
                           EventOFPSwitchFeatures.__name__)
-    _TABLE_ID_L2 = 1
 
     def __init__(self, contr):
         self._contr = contr
+        self._table_id_l2 = 2
         self.mac_to_port = {}
         self._supported = self._verify_contr_handlers()
 
@@ -74,11 +74,11 @@ class L2Switch(ABCRyuApp):
             # both flow_mod & packet_out
             if msg.buffer_id != ofproto.OFP_NO_BUFFER:
                 self._contr.add_flow(datapath, priority, match, inst,
-                                     0, self._TABLE_ID_L2, msg.buffer_id)
+                                     0, self._table_id_l2, msg.buffer_id)
                 return
             else:
                 self._contr.add_flow(datapath, priority, match, inst,
-                                     0, self._TABLE_ID_L2)
+                                     0, self._table_id_l2)
                 pass
 
         data = None
@@ -112,7 +112,7 @@ class L2Switch(ABCRyuApp):
         inst = [parser.OFPInstructionActions(
             ofproto.OFPIT_APPLY_ACTIONS, actions)]
         self._contr.add_flow(datapath, 0, match, inst, 0,
-                             self._TABLE_ID_L2)
+                             self._table_id_l2)
 
     def get_app_name(self):
         return self._APP_NAME

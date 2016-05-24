@@ -119,7 +119,7 @@ class ConfigLoader:
         :param parsed_json: The parsed JSON to check.
         :return: True if correct, False otherwise.
         """
-        if len(parsed_json) != 6:
+        if len(parsed_json) != 7:
             return False
         if "ip_src" not in parsed_json:
             return False
@@ -132,5 +132,7 @@ class ConfigLoader:
         if "port_dst" not in parsed_json:
             return False
         if "policy" not in parsed_json:
+            return False
+        if "action" not in parsed_json:
             return False
         return True

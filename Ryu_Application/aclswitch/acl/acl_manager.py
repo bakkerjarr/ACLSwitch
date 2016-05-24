@@ -16,7 +16,8 @@ class ACLManager:
 
     ACL_ENTRY = namedtuple("ACL_ENTRY",
                            "ip_src ip_dst tp_proto port_src "
-                           "port_dst policy time_start time_duration")
+                           "port_dst policy action time_start "
+                           "time_duration")
     WILDCARD = "*"
 
     def __init__(self, logging_config):
@@ -30,8 +31,9 @@ class ACLManager:
         self._logging.addHandler(logging_config["handler"])
         self._logging.info("Initialising ACLManager...")
         self._rule_syntax = ACLRuleSyntax()
-        self._acl_id_count = 0
-        self._access_control_list = {}  # rule_id:ACL_ENTRY
+        # The ACL contains rule_id to ACL_ENTRY mappings.
+        self._access_control_list = {}
+        self._rule_id_count = 0
 
     def acl_rule_syntax_check(self, rule):
         """Call the syntax check for ACL rules.
@@ -49,8 +51,7 @@ class ACLManager:
     def acl_add_rule(self, rule):
         """Add a rule to the ACL.
 
-        Check that the rule follows the proper syntax and has not been
-        entered before.
+        Assumes that the rule follows the correct syntax.
 
         :param rule: dict of the rule to add.
         :return: The ID of the new rule, None otherwise.
@@ -61,15 +62,17 @@ class ACLManager:
                                   port_src=rule["port_src"],
                                   port_dst=rule["port_dst"],
                                   policy=rule["policy"],
+                                  action=rule["action"],
                                   time_start=0,
                                   time_duration=0)
         if self._check_rule_exists(new_rule):
-            self._logging.warning("Rule already exists: %s", rule)
+            self._logging.warning("ACL rule already exists: %s", rule)
             return None
-        rule_id = self._acl_id_count
+        rule_id = self._rule_id_count
         self._access_control_list[rule_id] = new_rule
-        self._acl_id_count += 1  # Increment to keep IDs unique
-        self._logging.info("Rule %s created with id: %s", rule, rule_id)
+        self._rule_id_count += 1  # Increment to keep IDs unique
+        self._logging.info("ACL rule %s created with id: %s", rule,
+                           rule_id)
         return rule_id
 
     def acl_remove_rule(self, rule_id):
@@ -82,11 +85,11 @@ class ACLManager:
         """
         rule = self.acl_get_rule(rule_id)
         del self._access_control_list[rule_id]
-        self._logging.info("Removed rule: %s", rule_id)
+        self._logging.info("Removed ACL rule: %s", rule_id)
         return rule
 
     def acl_is_rule(self, rule_id):
-        """Check if a rule ID refers to a rule that exists.
+        """Check if an ACL rule ID refers to a rule that exists.
 
         :param rule_id: ID of the rule to check.
         :return: True if the rule exists, False otherwise.
@@ -94,19 +97,19 @@ class ACLManager:
         try:
             self._access_control_list[rule_id]
         except KeyError:
-            self._logging.warning("Rule %s does not exist.", rule_id)
+            self._logging.warning("ACL rule %s does not exist.", rule_id)
             return False
-        self._logging.debug("Rule %s exists.", rule_id)
+        self._logging.debug("ACL rule %s exists.", rule_id)
         return True
 
     def acl_get_rule(self, rule_id):
-        """Return a rule given a rule ID.
+        """Return an ACL rule given a rule ID.
 
         :param rule_id: ID of a rule.
         :return: Named tuple of a rule.
         """
         rule = self._access_control_list[rule_id]
-        self._logging.debug("Rule %s: %s", rule_id, rule)
+        self._logging.debug("ACL rule %s: %s", rule_id, rule)
         return rule
 
     def get_all_rules(self):
@@ -158,7 +161,7 @@ class ACLManager:
                 (rule_1.port_dst == rule_2.port_dst))
 
     def _check_rule_exists(self, new_rule):
-        """Check if a rule has already been added to the ACL.
+        """Check if an ACL rule has already been added to the ACL.
 
         :param new_rule: dict of the rule to check.
         :return: True if the rule exists in the ACL already,
