@@ -159,13 +159,15 @@ class ACLSwitch(ABCRyuApp):
         datapath = self._contr.switch_get_datapath(switch_id)
         ofproto = datapath.ofproto
         parser = datapath.ofproto_parser
+        table = self._table_id_blacklist if rule.action == "drop" else\
+            self._table_id_whitelist
         remove_type = ofproto.OFPFC_DELETE_STRICT
         priority = self._OFP_MAX_PRIORITY
         match = self._create_match(rule)
         out_port = ofproto.OFPP_ANY
         out_group = ofproto.OFPG_ANY
-        self._contr.remove_flow(datapath, parser, remove_type, priority,
-                                match, out_port, out_group)
+        self._contr.remove_flow(datapath, parser, table, remove_type,
+                                priority, match, out_port, out_group)
 
     def _create_match(self, rule):
         """Create an OFPMatch instance based on the contents of an

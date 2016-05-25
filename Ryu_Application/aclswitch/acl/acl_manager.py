@@ -158,7 +158,8 @@ class ACLManager:
                     rule_2.ip_dst)) and
                 (rule_1.tp_proto == rule_2.tp_proto) and
                 (rule_1.port_src == rule_2.port_src) and
-                (rule_1.port_dst == rule_2.port_dst))
+                (rule_1.port_dst == rule_2.port_dst) and
+                (rule_1.action == rule_2.action))
 
     def _check_rule_exists(self, new_rule):
         """Check if an ACL rule has already been added to the ACL.

@@ -110,7 +110,7 @@ class Controller(app_manager.RyuApp):
                                     instructions=inst, table_id=table_id)
         self._send_msg(datapath, mod)
 
-    def remove_flow(self, datapath, parser, remove_type, priority,
+    def remove_flow(self, datapath, parser, table, remove_type, priority,
                     match, out_port, out_group):
         """Remove a flow table entry from a switch.
 
@@ -118,15 +118,16 @@ class Controller(app_manager.RyuApp):
 
         :param datapath: The switch to remove the flow from.
         :param parser: Parser for the OpenFlow switch.
+        :param table: Table id to send the flow mod to.
         :param remove_type: OFPFC_DELETE or OFPFC_DELETE_STRICT.
         :param priority: Priority of the flow table entry.
         :param match: What packet header fields should be matched.
         :param out_port: Switch port to match.
         :param out_group: Switch group to match.
         """
-        mod = parser.OFPFlowMod(datapath=datapath, command=remove_type,
-                                priority=priority, match=match,
-                                out_port=out_port,
+        mod = parser.OFPFlowMod(datapath=datapath, table_id=table,
+                                command=remove_type, priority=priority,
+                                match=match, out_port=out_port,
                                 out_group=out_group)
         datapath.send_msg(mod)
 
