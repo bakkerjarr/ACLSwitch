@@ -120,7 +120,7 @@ class FlowScheduler:
 
             if rule_i_time < rule_time < rule_j_time:
                 self._rule_time_queue.insert(i + 1, [rule_id])
-
+                break
         return True
 
     def sched_remove_rule(self, rule_id):
@@ -153,7 +153,14 @@ class FlowScheduler:
 
         :return: The time queue as a list of lists.
         """
-        return self._rule_time_queue
+        queue_formatted = []
+        for time_period in self._rule_time_queue:
+            time_formatted = []
+            time = self._api.acl_get_rule(time_period[0]).time_enforce[0]
+            time_formatted.append(time)
+            time_formatted.extend(time_period)
+            queue_formatted.append(time_formatted)
+        return queue_formatted
 
     def _rule_deploy_alarm(self):
         """Distribute rules to switches when their time arises.
