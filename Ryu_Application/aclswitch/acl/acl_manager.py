@@ -16,8 +16,7 @@ class ACLManager:
 
     ACL_ENTRY = namedtuple("ACL_ENTRY",
                            "ip_src ip_dst tp_proto port_src "
-                           "port_dst policy action time_start "
-                           "time_duration")
+                           "port_dst policy action time_enforce")
     WILDCARD = "*"
 
     def __init__(self, logging_config):
@@ -56,6 +55,10 @@ class ACLManager:
         :param rule: dict of the rule to add.
         :return: The ID of the new rule, None otherwise.
         """
+        if "time_enforce" not in rule:
+            time_enforce = "N/A"
+        else:
+            time_enforce = rule["time_enforce"]
         new_rule = self.ACL_ENTRY(ip_src=rule["ip_src"],
                                   ip_dst=rule["ip_dst"],
                                   tp_proto=rule["tp_proto"],
@@ -63,8 +66,7 @@ class ACLManager:
                                   port_dst=rule["port_dst"],
                                   policy=rule["policy"],
                                   action=rule["action"],
-                                  time_start=0,
-                                  time_duration=0)
+                                  time_enforce=time_enforce)
         if self._check_rule_exists(new_rule):
             self._logging.warning("ACL rule already exists: %s", rule)
             return None

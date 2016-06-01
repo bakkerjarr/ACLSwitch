@@ -1,5 +1,6 @@
 # ACLSwitch modules
 from acl.acl_manager import ACLManager
+from flow.flow_scheduler import FlowScheduler
 from policy.policy_manager import PolicyManager
 
 # Module imports
@@ -27,6 +28,7 @@ class ACLSwitchAPI:
         self._flow_man = flow_man
         self._acl_man = ACLManager(logging_config)
         self._pol_man = PolicyManager(logging_config)
+        self._flow_sch = FlowScheduler(logging_config, self, flow_man)
 
     def acl_create_rule(self, rule):
         """Create an ACL rule.
@@ -38,13 +40,17 @@ class ACLSwitchAPI:
             return ReturnStatus.POLICY_NOT_EXISTS
         if not self._acl_man.acl_rule_syntax_check(rule):
             return ReturnStatus.RULE_SYNTAX_INVALID
+        # TODO If time is not valid then don't add it to the ACL!
         rule_id = self._acl_man.acl_add_rule(rule)
         if rule_id is None:
             return ReturnStatus.RULE_EXISTS
         self._pol_man.policy_add_rule(rule["policy"], rule_id)
-        switches = self._pol_man.policy_get_switches(rule["policy"])
-        self._flow_man.flow_deploy_single_rule(
-            self.acl_get_rule(rule_id), switches)
+        new_rule = self.acl_get_rule(rule_id)
+        if "time_enforce" not in rule:
+            switches = self.policy_get_switches(rule["policy"])
+            self._flow_man.flow_deploy_single_rule(new_rule, switches)
+        else:
+            self._flow_sch.sched_add_rule(rule_id, new_rule.time_enforce)
         return ReturnStatus.RULE_CREATED
 
     def acl_remove_rule(self, rule_id):
@@ -57,8 +63,11 @@ class ACLSwitchAPI:
             return ReturnStatus.RULE_NOT_EXISTS
         rule = self._acl_man.acl_remove_rule(rule_id)
         self._pol_man.policy_remove_rule(rule.policy, rule_id)
-        switches = self._pol_man.policy_get_switches(rule.policy)
-        self._flow_man.flow_remove_single_rule(rule, switches)
+        if "time_enforce" not in rule:
+            switches = self.policy_get_switches(rule.policy)
+            self._flow_man.flow_remove_single_rule(rule, switches)
+        else:
+            self._flow_sch.remove_rule(rule_id)
         return ReturnStatus.RULE_REMOVED
 
     def acl_get_rule(self, rule_id):
@@ -133,6 +142,14 @@ class ACLSwitchAPI:
         self._flow_man.flow_remove_multiple_rules(switch_id, rules)
         return ReturnStatus.POLICY_REVOKED
 
+    def policy_get_switches(self, policy):
+        """Return the switch IDs assigned to a policy domain.
+
+        :param policy: Policy domain name.
+        :return: A list of switch IDs.
+        """
+        return self._pol_man.policy_get_switches(policy)
+
     def switch_connect(self, switch_id):
         """A switch has connected to the network, inform the policy
         manager.
@@ -177,6 +194,13 @@ class ACLSwitchAPI:
         :return: A dict of switch IDs to a list of policies.
         """
         return self._pol_man.get_all_switches()
+
+    def get_time_queue(self):
+        """Fetch and return the time enforced ACL rule queue.
+
+        :return: The time queue as a list of lists.
+        """
+        return self._flow_sch.get_time_queue()
 
 
 class ReturnStatus:

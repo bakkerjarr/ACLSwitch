@@ -110,7 +110,7 @@ class PolicyManager:
         :param rule_id: An ACL rule id.
         """
         self._policy_to_rules[policy].append(rule_id)
-        self._logging.debug("Rule %s added from policy %s.", rule_id,
+        self._logging.debug("Rule %s added to policy %s.", rule_id,
                             policy)
 
     def policy_remove_rule(self, policy, rule_id):

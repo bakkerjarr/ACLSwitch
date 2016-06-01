@@ -10,9 +10,10 @@ class ConfigLoader:
     """An object to load configuration parameters.
     """
 
-    def __init__(self, policy_file, rule_file):
+    def __init__(self, policy_file, rule_file, time_rule_file):
         self._policy_file = policy_file
         self._rule_file = rule_file
+        self._time_rule_file = time_rule_file
         # Logging configuration
         min_lvl = logging.DEBUG
         console_handler = logging.StreamHandler()
@@ -40,7 +41,7 @@ class ConfigLoader:
     def load_policies(self):
         """Load the policy domains from file.
 
-        :return: A list of policies to add.
+        :return: A list of policies to create.
         """
         policies = []
         try:
@@ -71,7 +72,7 @@ class ConfigLoader:
     def load_rules(self):
         """Load the rules from file.
 
-        :return: A list of rules to add.
+        :return: A list of rules to create.
         """
         rules = []
         try:
@@ -99,6 +100,37 @@ class ConfigLoader:
                                 self._rule_file)
         return rules
 
+    def load_time_rules(self):
+        """Load the time enforced rules from file.
+
+        :return: A list of time enforced rules to create.
+        """
+        time_rules = []
+        try:
+            buf_in = open(self._time_rule_file)
+            self._logging.info("Reading config from file: %s",
+                               self._time_rule_file)
+            for line in buf_in:
+                if line[0] == "#" or not line.strip():
+                    continue  # Skip file comments and empty lines
+                try:
+                    rule = json.loads(line)
+                except ValueError:
+                    self._logging.warning("%s could not be parsed as "
+                                          "JSON.", line)
+                    continue
+                if not self._check_time_rule_json(rule):
+                    self._logging.warning("%s is not valid time rule "
+                                          "JSON", rule)
+                    continue
+                self._logging.debug("Read rule: %s", rule)
+                time_rules.append(rule)
+            buf_in.close()
+        except IOError:
+            self._logging.error("Unable to read from file: %s",
+                                self._rule_file)
+        return time_rules
+
     def _check_policy_json(self, parsed_json):
         """Check that a parsed piece of JSON is properly formed for a
         policy definition.
@@ -114,7 +146,7 @@ class ConfigLoader:
 
     def _check_rule_json(self, parsed_json):
         """Check that a parsed piece of JSON is properly formed for a
-        policy definition.
+        rule definition.
 
         :param parsed_json: The parsed JSON to check.
         :return: True if correct, False otherwise.
@@ -134,5 +166,34 @@ class ConfigLoader:
         if "policy" not in parsed_json:
             return False
         if "action" not in parsed_json:
+            return False
+        return True
+
+    def _check_time_rule_json(self, parsed_json):
+        """Check that a parsed piece of JSON is properly formed for a
+        time rule definition.
+
+        :param parsed_json: The parsed JSON to check.
+        :return: True if correct, False otherwise.
+        """
+        if len(parsed_json) != 8:
+            return False
+        if "ip_src" not in parsed_json:
+            return False
+        if "ip_dst" not in parsed_json:
+            return False
+        if "tp_proto" not in parsed_json:
+            return False
+        if "port_src" not in parsed_json:
+            return False
+        if "port_dst" not in parsed_json:
+            return False
+        if "policy" not in parsed_json:
+            return False
+        if "action" not in parsed_json:
+            return False
+        if "time_enforce" not in parsed_json:
+            return False
+        if len(parsed_json["time_enforce"]) != 2:
             return False
         return True

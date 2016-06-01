@@ -27,6 +27,7 @@ class ACLSwitchREST(ControllerBase):
     _URL = "/aclswitch"
     _URL_HEARTBEAT = _URL + "/heartbeat"
     _URL_ACL = _URL + "/acl"
+    _URL_ACL_TIME = _URL_ACL + "/time"
     _URL_POLICY = _URL + "/policy"
     _URL_POLICY_ASSIGN = _URL_POLICY + "/assignment"
     _URL_SWITCH = _URL + "/switch"
@@ -78,7 +79,19 @@ class ACLSwitchREST(ControllerBase):
         ACL rules.
         """
         body = self._MSG_INFO.copy()
-        body["info"] = self._api.get_all_rules()
+        body["info"] = {"rules": self._api.get_all_rules()}
+        return Response(content_type="application/json", status=200,
+                        body=json.dumps(body))
+
+    @route("aclswitch", _URL_ACL_TIME, methods=["GET"])
+    def get_acls_time(self, req, **kwargs):
+        """Endpoint for fetching the rules in the time queue.
+
+        :return: A response containing a JSON formatted list of all
+        time enforced ACL rules.
+        """
+        body = self._MSG_INFO.copy()
+        body["info"] = {"time_queue": self._api.get_time_queue()}
         return Response(content_type="application/json", status=200,
                         body=json.dumps(body))
 
@@ -122,7 +135,7 @@ class ACLSwitchREST(ControllerBase):
         policies and the rule IDs associated with each policy.
         """
         body = self._MSG_INFO.copy()
-        body["info"] = self._api.get_all_policies()
+        body["info"] = {"policies": self._api.get_all_policies()}
         return Response(content_type="application/json", status=200,
                         body=json.dumps(body))
 
@@ -194,7 +207,7 @@ class ACLSwitchREST(ControllerBase):
         to each switch.
         """
         body = self._MSG_INFO.copy()
-        body["info"] = self._api.get_all_switches()
+        body["info"] = {"switches": self._api.get_all_switches()}
         return Response(content_type="application/json", status=200,
                         body=json.dumps(body))
 

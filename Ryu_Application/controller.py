@@ -78,7 +78,7 @@ class Controller(app_manager.RyuApp):
 
     # Methods that send data to OpenFlow switches
 
-    def add_flow(self, datapath, priority, match, inst, time_limit,
+    def add_flow(self, datapath, priority, match, inst, hard_timeout,
                   table_id, buffer_id=None):
         """Reactively add a flow table entry to a switch's flow table.
 
@@ -86,7 +86,7 @@ class Controller(app_manager.RyuApp):
         :param priority: Priority of the flow-table entry.
         :param match: What packet header fields should be matched.
         :param inst: The behaviour that matching flows should follow.
-        :param time_limit: When the rule should expire.
+        :param hard_timeout: When the rule should expire.
         :param table_id: What flow table the flow-table entry should
         be sent to.
         :param buffer_id: Identifier of buffer queue if traffic is
@@ -98,13 +98,13 @@ class Controller(app_manager.RyuApp):
         if buffer_id:
             mod = parser.OFPFlowMod(datapath=datapath,
                                     buffer_id=buffer_id,
-                                    hard_timeout=time_limit,
+                                    hard_timeout=hard_timeout,
                                     priority=priority, match=match,
                                     flags=ofproto.OFPFF_SEND_FLOW_REM,
                                     instructions=inst, table_id=table_id)
         else:
             mod = parser.OFPFlowMod(datapath=datapath,
-                                    hard_timeout=time_limit,
+                                    hard_timeout=hard_timeout,
                                     priority=priority, match=match,
                                     flags=ofproto.OFPFF_SEND_FLOW_REM,
                                     instructions=inst, table_id=table_id)
