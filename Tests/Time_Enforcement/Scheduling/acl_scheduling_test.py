@@ -36,6 +36,32 @@ URL_ACL = "http://127.0.0.1:8080/aclswitch/acl"
 URL_ACL_TIME = URL_ACL + "/time"
 
 
+def create_rules(times, cur_time):
+    """Create a list of time enforced ACL rules.
+
+    The time in each rule is offset from the current time by an entry
+    from times.
+
+    :param times: List of time offsets.
+    :param cur_time: The current time.
+    :return: A list of time enforced ACL rules to create.
+    """
+    rules = []
+    i = 0
+    for t in times:
+        r = ({"ip_src": "10.0.0.1", "ip_dst": "10.0.0.2",
+              "tp_proto": "tcp", "port_src": "80", "port_dst": "*",
+              "policy": "default", "action": "drop", "time_enforce": [
+                ":", 60]})
+        time = cur_time + dt.timedelta(1, 0, 0, 0, eval(t))
+        r["time_enforce"][0] = time.strftime("%H:%M")
+        r["port_dst"] = str(i)
+        entry = {"rule": r, "t": t}
+        rules.append(entry)
+        i += 1
+    return rules
+
+
 def add_time_rules(rules):
     """Send time rules to ACLSwitch for scheduling.
 
@@ -101,6 +127,44 @@ def determine_expected_order(rules):
     return sorted(rules, key=lambda x: adjust(x["t"]))
 
 
+def process_aclswitch_queue(queue):
+    """Process the time queue output provided by ACLSwitch.
+
+    Build a table of the provided and a separate queue that will be
+    used for comparison with the expected order.
+
+    :param queue: Time enforced ACLSwitch rule queue.
+    :return:
+    """
+    # Have a separate queue for checking the order of rules due to
+    # formatting differences between ACLSwitch and this script.
+    check_queue = []
+    table = PrettyTable(["Rule ID", "Rule Time"])
+    for entry in queue:
+        # str(ids)[1:-1] is a wee hack to print a list object
+        # containing integers as a string without the square brackets.
+        # 1:-1 is used as the cast to a string makes the brackets part
+        #  of the string.
+        ids = entry[1:]
+        for i in ids:
+            table.add_row([i, entry[0]])
+            check_queue.append(i)
+    return table, check_queue
+
+
+def expected_rule_table(sorted_rules):
+    """Build a table of the expected ACLSwitch output.
+
+    :param sorted_rules: List of time enforced ACL rules sorted by time.
+    :return: The formatted table.
+    """
+    table = PrettyTable(["Rule ID", "Rule Time"])
+    for entry in sorted_rules:
+        table.add_row([entry["rule"]["port_dst"], entry["rule"][
+            "time_enforce"][0]])
+    return table
+
+
 def in_order(expected, received):
     """Determine whether or not the received queue is in the order
     that we expect. A rule's destination port is used as its ID.
@@ -118,6 +182,8 @@ def in_order(expected, received):
 
 def test():
     """Summary of the test here.
+
+    THIS IS AN EXAMPLE.
     """
     print("Beginning test \'" + TEST_NAME + "\'.\n\tCheck " +
           FILENAME_LOG_RESULTS + " for test results once the test"
@@ -133,19 +199,8 @@ def test():
     logging.info("\tCurrent time: " + str(cur_time.strftime("%H:%M")))
     print("\tCurrent time: " + str(cur_time.strftime("%H:%M")))
 
-    rules = []
-    i = 0
-
-    for t in TIMES:
-        r = ({"ip_src":"10.0.0.1", "ip_dst":"10.0.0.2", "tp_proto":"tcp",
-              "port_src":"80", "port_dst":"", "policy":"default",
-              "action": "drop","time_enforce":[":",60]})
-        time = cur_time + dt.timedelta(1,0,0,0,eval(t)) 
-        r["time_enforce"][0] = time.strftime("%H:%M")
-        r["port_dst"] = str(i)
-        entry = {"rule": r, "t": t}
-        rules.append(entry)
-        i += 1
+    # Create the time enforced ACL rules
+    rules = create_rules(TIMES, cur_time)
 
     # Send rules to ACLSwitch
     add_time_rules(rules)
@@ -154,19 +209,9 @@ def test():
     queue = get_time_queue()
     # Have a separate queue for checking the order of rules due to
     # formatting differences between ACLSwitch and this script.
-    check_queue = []
+    table, check_queue = process_aclswitch_queue(queue)
     logging.info("\tACLSwitch rule schedule")
     print("\tACLSwitch rule schedule")
-    table = PrettyTable(["Rule ID", "Rule Time"])
-    for entry in queue:
-        # str(ids)[1:-1] is a wee hack to print a list object
-        # containing integers as a string without the square brackets.
-        # 1:-1 is used as the cast to a string makes the brackets part
-        #  of the string.
-        ids = entry[1:]
-        for i in ids:
-            table.add_row([i, entry[0]])
-            check_queue.append(i)
     logging.info(table)
     print(table)
 
@@ -176,10 +221,7 @@ def test():
     # A rule's ID is based off of it's destination port in this case
     logging.info("\tExpected rule schedule")
     print("\tExpected rule schedule")
-    table = PrettyTable(["Rule ID", "Rule Time"])
-    for entry in sorted_list:
-        table.add_row([entry["rule"]["port_dst"], entry["rule"][
-            "time_enforce"][0]])
+    table = expected_rule_table(sorted_list)
     logging.info(table)
     print(table)
 
