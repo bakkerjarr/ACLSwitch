@@ -79,7 +79,7 @@ class ACLSwitchREST(ControllerBase):
         ACL rules.
         """
         body = self._MSG_INFO.copy()
-        body["info"] = {"rules": self._api.get_all_rules()}
+        body["info"] = self._api.get_all_rules()
         return Response(content_type="application/json", status=200,
                         body=json.dumps(body))
 
@@ -91,7 +91,7 @@ class ACLSwitchREST(ControllerBase):
         time enforced ACL rules.
         """
         body = self._MSG_INFO.copy()
-        body["info"] = {"time_queue": self._api.get_time_queue()}
+        body["info"] = self._api.get_time_queue()
         return Response(content_type="application/json", status=200,
                         body=json.dumps(body))
 
@@ -135,7 +135,7 @@ class ACLSwitchREST(ControllerBase):
         policies and the rule IDs associated with each policy.
         """
         body = self._MSG_INFO.copy()
-        body["info"] = {"policies": self._api.get_all_policies()}
+        body["info"] = self._api.get_all_policies()
         return Response(content_type="application/json", status=200,
                         body=json.dumps(body))
 
@@ -207,7 +207,7 @@ class ACLSwitchREST(ControllerBase):
         to each switch.
         """
         body = self._MSG_INFO.copy()
-        body["info"] = {"switches": self._api.get_all_switches()}
+        body["info"] = self._api.get_all_switches()
         return Response(content_type="application/json", status=200,
                         body=json.dumps(body))
 

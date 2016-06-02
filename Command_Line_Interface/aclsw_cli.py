@@ -5,9 +5,9 @@ import requests
 import signal
 import sys
 
+from modules.acl import ACL
 from modules.policy import Policy
-from modules.rule import Rule
-from modules.view import View
+from modules import cli_util
 
 __author__ = "Jarrod N. Bakker"
 __status__ = "development"
@@ -20,7 +20,7 @@ class ACLSwitchCLI(cmd.Cmd):
     MSG_ERR_ACLSW_CON = "ERROR: Unable to establish a connection with " \
                         "ACLSwitch."
     MSG_ERR_ACLSW_CON_LOST = "ERROR: Connection with ACLSwitch lost."
-    _URL_ACLSW = "http://127.0.0.1:8080/acl_switch/"
+    _URL_ACLSW = "http://127.0.0.1:8080/aclswitch"
 
     def __init__(self):
         """Initialise the main interface.
@@ -30,33 +30,67 @@ class ACLSwitchCLI(cmd.Cmd):
         # Create and initialise CLI objects
         cmd.Cmd.__init__(self)
         self.intro = "Welcome to the ACLSwitch command line " \
-                     "interface.\nType help or ? to list thei " \
+                     "interface.\nType help or ? to list the " \
                      "available commands.\n"
         self.prompt = "(ACLSwitch) "
-        self._policy = Policy(self)
-        self._rule = Rule(self)
-        self._view = View(self)
+        self._url_aclsw_hb = self._URL_ACLSW + "/heartbeat"
+        self._policy = Policy(self, self._URL_ACLSW)
+        self._acl = ACL(self, self._URL_ACLSW)
+        # self._view = View(self, self._URL_ACLSW)
         # TODO After CLI start-up, heartbeat ACLSwitch to see if it's live
 
-    def do_policy(self, args):
+    def do_acl(self, arg):
+        """Present the user with different options to modify rules.
+        """
+        self._acl.cmdloop()
+
+    def do_policy(self, arg):
         """Present the user with different options to modify policy domains.
         """
         self._policy.cmdloop()
 
-    def do_rule(self, args):
-        """Present the user with different options to modify rules.
+    def do_status(self, arg):
+        """Fetch some basic information from ACLSwitch.
         """
-        self._rule.cmdloop()
+        info = self._fetch_status()
+        if info is None:
+            return
+        print("Number of ACL rules: {0}".format(info["num_rules"]))
+        print("Number of policy domains: {0}".format(info[
+                                                        "num_policies"]))
+        print("Number of connected switches: {0}".format(info[
+                                                        "num_switches"]))
 
-    def do_view(self, args):
-        """Present the user with different options to view data.
-        """
-        self._view.cmdloop()
-
-    def do_exit(self, args):
+    def do_exit(self, arg):
         """Close the program.
         """
         self._close_program()
+
+    def _fetch_status(self):
+        """Fetch some basic status information from ACLSwitch.
+
+        :return: Information in a dict, None if error.
+        """
+        print("Fetching status information...")
+        try:
+            resp = requests.get(self._URL_ACLSW)
+        except requests.ConnectionError as err:
+            print(cli_util.MSG_CON_ERR + str(err))
+            return None
+        except requests.HTTPError as err:
+            print(cli_util.MSG_HTTP_ERR + str(err))
+            return None
+        except requests.Timeout as err:
+            print(cli_util.MSG_TIMEOUT + str(err))
+            return None
+        except requests.TooManyRedirects as err:
+            print(cli_util.MSG_REDIRECT_ERR + str(err))
+            return None
+        if resp.status_code != 200:
+            print("Error fetching resource, HTTP {0} "
+                  "returned.".format(resp.status_code))
+            return None
+        return resp.json()
 
     def _heartbeat(self):
 
@@ -66,6 +100,7 @@ class ACLSwitchCLI(cmd.Cmd):
         self._close_program()
 
     def _close_program(self):
+        print("\n")
         sys.exit(0)
 
 if __name__ == "__main__":

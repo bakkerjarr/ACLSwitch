@@ -120,7 +120,20 @@ class ACLManager:
 
         :return: A dict of rules IDs to rules.
         """
-        return self._access_control_list
+        formatted_acl = {}
+        for rule_id in self._access_control_list:
+            rule = self._access_control_list[rule_id]
+            formatted_acl[int(rule_id)] = {"rule_id": rule_id,
+                                           "ip_src": rule.ip_src,
+                                           "ip_dst": rule.ip_dst,
+                                           "tp_proto": rule.tp_proto,
+                                           "port_src": rule.port_src,
+                                           "port_dst": rule.port_dst,
+                                           "policy": rule.policy,
+                                           "action": rule.action,
+                                           "time_enforce":
+                                               rule.time_enforce}
+        return formatted_acl
 
     def get_num_rules(self):
         """Return the number of ACL rules.

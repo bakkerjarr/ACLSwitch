@@ -177,7 +177,7 @@ class ACLSwitchAPI:
 
         :return: A dict of policies to a list of rule IDs.
         """
-        return self._pol_man.get_all_policies()
+        return {"policies": self._pol_man.get_all_policies()}
 
     def get_all_rules(self):
         """Fetch and return a dict of ACL rule IDs to their respective
@@ -193,14 +193,14 @@ class ACLSwitchAPI:
 
         :return: A dict of switch IDs to a list of policies.
         """
-        return self._pol_man.get_all_switches()
+        return {"switches": self._pol_man.get_all_switches()}
 
     def get_time_queue(self):
         """Fetch and return the time enforced ACL rule queue.
 
         :return: The time queue as a list of lists.
         """
-        return self._flow_sch.get_time_queue()
+        return {"time_queue": self._flow_sch.get_time_queue()}
 
 
 class ReturnStatus:
