@@ -29,14 +29,11 @@ import os
 import requests
 import sys
 
-FILENAME_LOG_RESULTS = None
-TEST_NAME = None
-TIMES = ["+20", "+30", "+40", "+50", "+35", "-40", "+80", "-100", "-10"]
 URL_ACL = "http://127.0.0.1:8080/aclswitch/acl"
 URL_ACL_TIME = URL_ACL + "/time"
 
 
-def create_rules(times, cur_time):
+def _create_rules(times, cur_time):
     """Create a list of time enforced ACL rules.
 
     The time in each rule is offset from the current time by an entry
@@ -62,7 +59,7 @@ def create_rules(times, cur_time):
     return rules
 
 
-def add_time_rules(rules):
+def _add_time_rules(rules):
     """Send time rules to ACLSwitch for scheduling.
 
     :param rules: the rules to send.
@@ -84,7 +81,7 @@ def add_time_rules(rules):
             print(resp.text)
 
 
-def get_time_queue():
+def _get_time_queue():
     """Fetch the queue of rules that have been time scheduled.
 
     :return: the queue of scheduled rules.
@@ -104,7 +101,7 @@ def get_time_queue():
     return queue["info"]["time_queue"]
     
 
-def adjust(x):
+def _adjust(x):
     """Adjust x for sorting in a lambda function. If x is less than 0
     then add 3600 to it else just edit it as normal.
 
@@ -117,17 +114,17 @@ def adjust(x):
         return eval(x)+3600
 
 
-def determine_expected_order(rules):
+def _determine_expected_order(rules):
     """Determine the expected ordering of the scheduled rules so that
     it may be compared.
 
     :param rules: list of rules to sort in terms of their scheduled times.
     :return: the sorted list.
     """
-    return sorted(rules, key=lambda x: adjust(x["t"]))
+    return sorted(rules, key=lambda x: _adjust(x["t"]))
 
 
-def process_aclswitch_queue(queue):
+def _process_aclswitch_queue(queue):
     """Process the time queue output provided by ACLSwitch.
 
     Build a table of the provided and a separate queue that will be
@@ -152,7 +149,7 @@ def process_aclswitch_queue(queue):
     return table, check_queue
 
 
-def expected_rule_table(sorted_rules):
+def _expected_rule_table(sorted_rules):
     """Build a table of the expected ACLSwitch output.
 
     :param sorted_rules: List of time enforced ACL rules sorted by time.
@@ -165,7 +162,7 @@ def expected_rule_table(sorted_rules):
     return table
 
 
-def in_order(expected, received):
+def _in_order(expected, received):
     """Determine whether or not the received queue is in the order
     that we expect. A rule's destination port is used as its ID.
 
@@ -180,36 +177,38 @@ def in_order(expected, received):
     return True
 
 
-def test():
-    """Summary of the test here.
+def test_schedule(test_name, filename_log_results, times):
+    """Begin a test scenario.
 
-    THIS IS AN EXAMPLE.
+    :param test_name: Name of the test.
+    :param filename_log_results: File to write results to.
+    :param times: The time offsets for time enforced ACL rules.
     """
-    print("Beginning test \'" + TEST_NAME + "\'.\n\tCheck " +
-          FILENAME_LOG_RESULTS + " for test results once the test"
-          " has finished.")
-    logging.info("Beginning test \'"+TEST_NAME+"\'") # test name here
-
-    #logging.info("\t") # use for general information and test passed
-    #logging.warning("\t") # use when something goes wrong e.g. test failed
+    logging.basicConfig(filename=filename_log_results,
+                    format='%(asctime)s %(message)s',
+                    level=logging.DEBUG)
+    print("Beginning test \'{0}\'.\n\tCheck {1} for test results once "
+          "the test has finished.".format(test_name,
+                                          filename_log_results))
+    logging.info("Beginning test \'%s\'",  test_name)
 
     cur_time = dt.datetime.strptime(dt.datetime.now().strftime("%H:%M"),
                                     "%H:%M")
 
-    logging.info("\tCurrent time: " + str(cur_time.strftime("%H:%M")))
-    print("\tCurrent time: " + str(cur_time.strftime("%H:%M")))
+    logging.info("\tCurrent time: %s", cur_time.strftime("%H:%M"))
+    print("\tCurrent time: {0}".format(cur_time.strftime("%H:%M")))
 
     # Create the time enforced ACL rules
-    rules = create_rules(TIMES, cur_time)
+    rules = _create_rules(times, cur_time)
 
     # Send rules to ACLSwitch
-    add_time_rules(rules)
+    _add_time_rules(rules)
 
     # Read back the queue of scheduled rules
-    queue = get_time_queue()
+    queue = _get_time_queue()
     # Have a separate queue for checking the order of rules due to
     # formatting differences between ACLSwitch and this script.
-    table, check_queue = process_aclswitch_queue(queue)
+    table, check_queue = _process_aclswitch_queue(queue)
     logging.info("\tACLSwitch rule schedule")
     print("\tACLSwitch rule schedule")
     logging.info(table)
@@ -217,37 +216,35 @@ def test():
 
     # Sort the list of rules that were just sent and determine what
     # order they should be in.
-    sorted_list = determine_expected_order(rules)
+    sorted_list = _determine_expected_order(rules)
     # A rule's ID is based off of it's destination port in this case
     logging.info("\tExpected rule schedule")
     print("\tExpected rule schedule")
-    table = expected_rule_table(sorted_list)
+    table = _expected_rule_table(sorted_list)
     logging.info(table)
     print(table)
 
     # Are they the same?
-    if in_order(sorted_list, check_queue):
-        logging.info("\tTEST PASSED: Rules are scheduled in the "
+    if _in_order(sorted_list, check_queue):
+        logging.info("\tTEST PASSED: Rule have been scheduled in the "
                      "correct order.")
         print("\tTEST PASSED: Rules are scheduled in the correct order.")    
     else:
-        logging.warning("\tTEST FAILED: Rules were not scheduled in "
-                        "the correct order.")
+        logging.warning("\tTEST FAILED: Rules were not scheduled in the "
+                        "correct order.")
         print("\tTEST FAILED: Rules were not scheduled in the correct "
               "order.")
 
-    logging.info("Test \'"+TEST_NAME+"\' complete.")
-    print("Test complete. Check " + FILENAME_LOG_RESULTS +
-          " for details.")
+    logging.info("Test \'%s\' complete.", test_name)
+    print("Test complete. Check {0} for details.".format(
+        filename_log_results))
 
 if __name__ == "__main__":
-    TEST_NAME = os.path.basename(__file__)
-    FILENAME_LOG_RESULTS = TEST_NAME[:-3] + "_results.log"
-    
-    # Log file
-    logging.basicConfig(filename=FILENAME_LOG_RESULTS,
-                        format='%(asctime)s %(message)s',
-                        level=logging.DEBUG)
+    test_name = os.path.basename(__file__)
+    filename_log_results = test_name[:-3] + "_results.log"
+
     # Begin the test
-    test()
+    times = ["+20", "+30", "+40", "+50", "+35", "-40", "+80", "-100",
+             "-10"]
+    test_schedule(test_name, filename_log_results, times)
 
