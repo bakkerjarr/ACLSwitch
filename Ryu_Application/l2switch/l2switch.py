@@ -1,3 +1,40 @@
+# Copyright 2015 Jarrod N. Bakker
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+#########################################################################
+#
+# This is code is based on simple_switch_13.py from
+# https://github.com/osrg/ryu/blob/master/ryu/app/simple_switch_13.py.
+# The original license for simple_switch_13.py can be found below.
+#
+#########################################################################
+# Copyright (C) 2011 Nippon Telegraph and Telephone Corporation.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#    http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or
+# implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#########################################################################
+
 # Module imports
 from ryu.controller.ofp_event import EventOFPPacketIn
 from ryu.controller.ofp_event import EventOFPSwitchFeatures
@@ -47,8 +84,8 @@ class L2Switch(ABCRyuApp):
         self.mac_to_port.setdefault(dpid, {})
 
         print("{0}: Packet in\t-\tData-path ID: {1}, Source Ethernet: "
-              "{2}, Destination Ethernet: {3}, Ingress switch port: {"
-              "4}".format(self._APP_NAME, dpid, eth_src, eth_dst,
+              "{2}, Destination Ethernet: {3}, Ingress switch port: "
+              "{4}".format(self._APP_NAME, dpid, eth_src, eth_dst,
               in_port))
 
         # learn a mac address to avoid FLOOD next time.
