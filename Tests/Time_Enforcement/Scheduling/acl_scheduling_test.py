@@ -138,10 +138,6 @@ def _process_aclswitch_queue(queue):
     check_queue = []
     table = PrettyTable(["Rule ID", "Rule Time"])
     for entry in queue:
-        # str(ids)[1:-1] is a wee hack to print a list object
-        # containing integers as a string without the square brackets.
-        # 1:-1 is used as the cast to a string makes the brackets part
-        #  of the string.
         ids = entry[1:]
         for i in ids:
             table.add_row([i, entry[0]])
