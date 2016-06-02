@@ -185,8 +185,8 @@ def test_schedule(test_name, filename_log_results, times):
     :param times: The time offsets for time enforced ACL rules.
     """
     logging.basicConfig(filename=filename_log_results,
-                    format='%(asctime)s %(message)s',
-                    level=logging.DEBUG)
+                        format='%(asctime)s %(message)s',
+                        level=logging.DEBUG)
     print("Beginning test \'{0}\'.\n\tCheck {1} for test results once "
           "the test has finished.".format(test_name,
                                           filename_log_results))
