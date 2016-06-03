@@ -46,11 +46,8 @@ class ACLSwitchCLI(cmd.Cmd):
                      "interface.\nType help or ? to list the " \
                      "available commands.\n"
         self.prompt = "(ACLSwitch) "
-        self._url_aclsw_hb = self._URL_ACLSW + "/heartbeat"
         self._policy = Policy(self, self._URL_ACLSW)
         self._acl = ACL(self, self._URL_ACLSW)
-        # self._view = View(self, self._URL_ACLSW)
-        # TODO After CLI start-up, heartbeat ACLSwitch to see if it's live
 
     def do_acl(self, arg):
         """Present the user with different options to modify rules.
@@ -104,10 +101,6 @@ class ACLSwitchCLI(cmd.Cmd):
                   "returned.".format(resp.status_code))
             return None
         return resp.json()
-
-    def _heartbeat(self):
-
-        pass
 
     def signal_handler(self, sig, frame):
         self._close_program()

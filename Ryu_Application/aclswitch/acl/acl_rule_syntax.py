@@ -13,6 +13,7 @@
 # limitations under the License.
 
 # Other modules
+from datetime import datetime
 from netaddr import IPAddress
 from netaddr import AddrFormatError
 
@@ -28,6 +29,10 @@ class ACLRuleSyntax:
     list will contain the appropriate error messages.
     """
 
+    # Time is expressed in seconds
+    _MIN_TIME = 1
+    _MAX_TIME = 65535
+
     def check_rule(self, rule):
         """Check if an ACL rule has valid syntax.
 
@@ -40,31 +45,42 @@ class ACLRuleSyntax:
         tp_proto = rule["tp_proto"]
         port_src = rule["port_src"]
         port_dst = rule["port_dst"]
+        action = rule["action"]
         errors = []
-        ip_src_result = self.check_ip(ip_src)
-        ip_dst_result = self.check_ip(ip_dst)
+        ip_src_result = self._check_ip(ip_src)
+        ip_dst_result = self._check_ip(ip_dst)
         if not ip_src_result:
             errors.append("Invalid source IP address: " + ip_src)
         if not ip_dst_result:
             errors.append("Invalid destination IP address: " + ip_dst)
         if ip_src_result and ip_dst_result:
-            if not self.check_ip_versions(ip_src, ip_dst):
+            if not self._check_ip_versions(ip_src, ip_dst):
                 errors.append("Unsupported rule: both IP addresses "
                               "must be of the same version.")
-        if not self.check_transport_protocol(tp_proto):
+        if not self._check_transport_protocol(tp_proto):
             errors.append("Invalid transport protocol (layer 4): " +
                           tp_proto)
-        if not self.check_port(port_src):
+        if not self._check_port(port_src):
             errors.append("Invalid source port: " + port_src)
-        if not self.check_port(port_dst):
+        if not self._check_port(port_dst):
             errors.append("Invalid destination port: " + port_dst)
-        if not self.check_transport_valid(tp_proto, port_src, port_dst):
+        if not self._check_transport_valid(tp_proto, port_src, port_dst):
             errors.append("Unsupported rule: transport protocol: " +
                           tp_proto + " source port: " + port_src +
                           " destination port: " + port_dst)
+        if not self._check_action(action):
+            errors.append("Unsupported action: {0}".format(action))
+        if "time_enforce" in rule:
+            start_time = rule["time_enforce"][0]
+            duration = rule["time_enforce"][1]
+            if not self._check_start_time(start_time):
+                errors.append("Start time invalid: {0}".format(
+                    start_time))
+            if not self._check_duration(duration):
+                errors.append("Duration invalid: {0}".format(duration))
         return errors
 
-    def check_ip(self, address):
+    def _check_ip(self, address):
         """Check that a valid IP (v4 or v6) address has been specified.
 
         :param address: The IP address to check.
@@ -78,7 +94,7 @@ class ACLRuleSyntax:
                 return True
             return False
 
-    def check_ip_versions(self, ip_src, ip_dst):
+    def _check_ip_versions(self, ip_src, ip_dst):
         """Check that the source and destination IP addresses are of
         the same version.
 
@@ -92,7 +108,7 @@ class ACLRuleSyntax:
             return True
         return IPAddress(ip_src).version == IPAddress(ip_dst).version
 
-    def check_transport_protocol(self, protocol):
+    def _check_transport_protocol(self, protocol):
         """ACLSwtich can block all traffic (denoted by tp_proto ==
         "*") or by checking TCP or UDP port numbers. This function
         checks that the specified transport layer (layer 4) protocol
@@ -104,7 +120,7 @@ class ACLRuleSyntax:
         return (protocol == "tcp" or protocol == "udp" or protocol ==
                 "*")
 
-    def check_port(self, port):
+    def _check_port(self, port):
         """A port is valid if it is either "*" or between 0 and 65535
         inclusive.
 
@@ -121,7 +137,7 @@ class ACLRuleSyntax:
                 return True
             return False
 
-    def check_transport_valid(self, tp_proto, port_src, port_dst):
+    def _check_transport_valid(self, tp_proto, port_src, port_dst):
         """An OFPMatch cannot have both TCP and UDP information in it.
         Therefore an ACL rule is not valid if the tp_proto is "*" and
         port numbers are specified.
@@ -133,3 +149,39 @@ class ACLRuleSyntax:
         """
         return not(tp_proto == "*" and (port_src != "*" or port_dst !=
                                         "*"))
+
+    def _check_action(self, action):
+        """The only supported actions for rules are drop and allow.
+
+        :param action: The action of a candidate rule.
+        :return: True if valid, False if not valid.
+        """
+        return action == "drop" or action == "allow"
+
+    def _check_start_time(self, start_time):
+        """Start time must be formatted with a ":" in between the
+        hours and minutes and must be in 24hr format.
+
+        :param start_time: The time to check.
+        :return: True if valid, False if not valid.
+        """
+        try:
+            datetime.strptime(start_time, "%H:%M")
+        except ValueError:
+            return False
+        return True
+
+    def _check_duration(self, duration):
+        """The duration must be between an integer _MIN_TIME and
+        _MAX_TIME in seconds.
+
+        :param duration: Duration to check.
+        :return: True if valid, False if not valid.
+        """
+        try:
+            i = int(duration)
+            if not self._MIN_TIME < i < self._MAX_TIME:
+                raise ValueError
+        except ValueError:
+            return False
+        return True

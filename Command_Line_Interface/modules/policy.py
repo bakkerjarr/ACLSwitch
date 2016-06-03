@@ -16,6 +16,7 @@
 from prettytable import PrettyTable
 import cli_util
 import cmd
+import json
 import requests
 
 __author__ = "Jarrod N. Bakker"
@@ -58,10 +59,228 @@ class Policy(cmd.Cmd):
         else:
             print("Argument neither: policy NOR switch")
 
+    def do_create(self, arg):
+        """Create a policy domain.
+        """
+        args = cli_util.parse(arg)
+        if len(args) < 1:
+            print("Argument expected: <policy name>")
+            return
+        if len(args) != 1:
+            print("Incorrect number of arguments: {0} "
+                  "provided.".format(len(arg)))
+            return
+        policy = self._policy_to_json(args)
+        self._post_policy(policy)
+        return
+
+    def do_remove(self, arg):
+        """Remove a policy domain.
+        """
+        args = cli_util.parse(arg)
+        if len(args) < 1:
+            print("Argument expected: <policy name>")
+            return
+        if len(args) != 1:
+            print("Incorrect number of arguments: {0} "
+                  "provided.".format(len(arg)))
+            return
+        policy = self._policy_to_json(args)
+        self._delete_policy(policy)
+        return
+
+    def do_assign(self, arg):
+        """Assign a policy domain to a switch.
+        """
+        args = cli_util.parse(arg)
+        if len(args) < 1:
+            print("Argument expected: <policy name> <switch ID>")
+            return
+        if len(args) != 2:
+            print("Incorrect number of arguments: {0} "
+                  "provided.".format(len(arg)))
+            return
+        try:
+            i = int(args[1])
+            if i < 0:
+                raise ValueError
+        except ValueError:
+            print("Argument error: switch ID should be a positive "
+                  "whole number.")
+            return
+        policy = self._policy_assign_to_json(args)
+        self._put_policy_assign(policy)
+        return
+
+    def do_revoke(self, arg):
+        """Revoke a policy domain assignment from a switch.
+        """
+        args = cli_util.parse(arg)
+        if len(args) < 1:
+            print("Argument expected: <policy name> <switch ID>")
+            return
+        if len(args) != 2:
+            print("Incorrect number of arguments: {0} "
+                  "provided.".format(len(arg)))
+            return
+        try:
+            i = int(args[1])
+            if i < 0:
+                raise ValueError
+        except ValueError:
+            print("Argument error: switch ID should be a positive "
+                  "whole number.")
+            return
+        policy = self._policy_assign_to_json(args)
+        self._delete_policy_assign(policy)
+        return
+
     def do_exit(self, arg):
         """Go back to the previous interface options.
         """
         return True
+
+    def _policy_to_json(self, args):
+        """Convert a policy domain argument into a JSON object for
+        transmission.
+
+        :param args: Tuple containing a new policy domain name.
+        :return: JSON representation of the policy domain.
+        """
+        return json.dumps({"policy": args[0]})
+
+    def _policy_assign_to_json(self, args):
+        """Convert policy domain assignment arguments into a JSON
+        object for transmission.
+
+        :param args: Tuple containing a new policy domain name.
+        :return: JSON representation of the policy domain.
+        """
+        return json.dumps({"policy": args[0], "switch_id": int(args[1])})
+
+    def _post_policy(self, rule_json):
+        """Send a JSON object representing an policy domain to
+        ACLSwitch for creation.
+
+        :param rule_json: The JSON object to send.
+        """
+        try:
+            resp = requests.post(self._url_policy, data=rule_json,
+                                 headers={"Content-type":
+                                          "application/json"})
+        except requests.ConnectionError as err:
+            print(cli_util.MSG_CON_ERR + str(err))
+            return
+        except requests.HTTPError as err:
+            print(cli_util.MSG_HTTP_ERR + str(err))
+            return
+        except requests.Timeout as err:
+            print(cli_util.MSG_TIMEOUT + str(err))
+            return
+        except requests.TooManyRedirects as err:
+            print(cli_util.MSG_REDIRECT_ERR + str(err))
+            return
+        if resp.status_code == 500:
+            print(resp.json()["critical"])
+            return
+        if resp.status_code != 200:
+            print("Error creating resource, HTTP {0} "
+                  "returned.".format(resp.status_code))
+            return
+        print(resp.json()["info"])
+
+    def _delete_policy(self, rule_json):
+        """Send a JSON object representing an policy domain to
+        ACLSwitch for removal.
+
+        :param rule_json: The JSON object to send.
+        """
+        try:
+            resp = requests.delete(self._url_policy, data=rule_json,
+                                   headers={"Content-type":
+                                            "application/json"})
+        except requests.ConnectionError as err:
+            print(cli_util.MSG_CON_ERR + str(err))
+            return
+        except requests.HTTPError as err:
+            print(cli_util.MSG_HTTP_ERR + str(err))
+            return
+        except requests.Timeout as err:
+            print(cli_util.MSG_TIMEOUT + str(err))
+            return
+        except requests.TooManyRedirects as err:
+            print(cli_util.MSG_REDIRECT_ERR + str(err))
+            return
+        if resp.status_code == 500:
+            print(resp.json()["critical"])
+            return
+        if resp.status_code != 200:
+            print("Error creating resource, HTTP {0} "
+                  "returned.".format(resp.status_code))
+            return
+        print(resp.json()["info"])
+
+    def _put_policy_assign(self, rule_json):
+        """Send a JSON object representing an policy domain assignment
+        to ACLSwitch.
+
+        :param rule_json: The JSON object to send.
+        """
+        try:
+            resp = requests.put(self._url_policy_assign, data=rule_json,
+                                headers={"Content-type":
+                                         "application/json"})
+        except requests.ConnectionError as err:
+            print(cli_util.MSG_CON_ERR + str(err))
+            return
+        except requests.HTTPError as err:
+            print(cli_util.MSG_HTTP_ERR + str(err))
+            return
+        except requests.Timeout as err:
+            print(cli_util.MSG_TIMEOUT + str(err))
+            return
+        except requests.TooManyRedirects as err:
+            print(cli_util.MSG_REDIRECT_ERR + str(err))
+            return
+        if resp.status_code == 500:
+            print(resp.json()["critical"])
+            return
+        if resp.status_code != 200:
+            print("Error creating resource, HTTP {0} "
+                  "returned.".format(resp.status_code))
+            return
+        print(resp.json()["info"])
+
+    def _delete_policy_assign(self, rule_json):
+        """Send a JSON object representing an policy domain assignment
+        revoke to ACLSwitch.
+
+        :param rule_json: The JSON object to send.
+        """
+        try:
+            resp = requests.delete(self._url_policy_assign,
+                                   data=rule_json, headers={
+                                    "Content-type": "application/json"})
+        except requests.ConnectionError as err:
+            print(cli_util.MSG_CON_ERR + str(err))
+            return
+        except requests.HTTPError as err:
+            print(cli_util.MSG_HTTP_ERR + str(err))
+            return
+        except requests.Timeout as err:
+            print(cli_util.MSG_TIMEOUT + str(err))
+            return
+        except requests.TooManyRedirects as err:
+            print(cli_util.MSG_REDIRECT_ERR + str(err))
+            return
+        if resp.status_code == 500:
+            print(resp.json()["critical"])
+            return
+        if resp.status_code != 200:
+            print("Error creating resource, HTTP {0} "
+                  "returned.".format(resp.status_code))
+            return
+        print(resp.json()["info"])
 
     def _fetch_policies(self):
         """Fetch the policy domains from ACLSwitch.
@@ -83,6 +302,9 @@ class Policy(cmd.Cmd):
         except requests.TooManyRedirects as err:
             print(cli_util.MSG_REDIRECT_ERR + str(err))
             return None
+        if resp.status_code == 500:
+            print(resp.json()["critical"])
+            return
         if resp.status_code != 200:
             print("Error fetching resource, HTTP {0} "
                   "returned.".format(resp.status_code))
@@ -110,6 +332,9 @@ class Policy(cmd.Cmd):
         except requests.TooManyRedirects as err:
             print(cli_util.MSG_REDIRECT_ERR + str(err))
             return None
+        if resp.status_code == 500:
+            print(resp.json()["critical"])
+            return
         if resp.status_code != 200:
             print("Error fetching resource, HTTP {0} "
                   "returned.".format(resp.status_code))

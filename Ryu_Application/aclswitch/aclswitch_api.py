@@ -54,13 +54,12 @@ class ACLSwitchAPI:
             return ReturnStatus.POLICY_NOT_EXISTS
         if not self._acl_man.acl_rule_syntax_check(rule):
             return ReturnStatus.RULE_SYNTAX_INVALID
-        # TODO If time is not valid then don't add it to the ACL!
         rule_id = self._acl_man.acl_add_rule(rule)
         if rule_id is None:
             return ReturnStatus.RULE_EXISTS
         self._pol_man.policy_add_rule(rule["policy"], rule_id)
         new_rule = self.acl_get_rule(rule_id)
-        if "time_enforce" not in rule:
+        if new_rule.time_enforce == "N/A":
             switches = self.policy_get_switches(rule["policy"])
             self._flow_man.flow_deploy_single_rule(new_rule, switches)
         else:
@@ -77,11 +76,13 @@ class ACLSwitchAPI:
             return ReturnStatus.RULE_NOT_EXISTS
         rule = self._acl_man.acl_remove_rule(rule_id)
         self._pol_man.policy_remove_rule(rule.policy, rule_id)
-        if "time_enforce" not in rule:
+        switches = self.policy_get_switches(rule.policy)
+        if rule.time_enforce == "N/A":
             switches = self.policy_get_switches(rule.policy)
             self._flow_man.flow_remove_single_rule(rule, switches)
         else:
-            self._flow_sch.remove_rule(rule_id)
+            self._flow_sch.sched_remove_rule(rule_id)
+            self._flow_man.flow_remove_single_rule(rule, switches)
         return ReturnStatus.RULE_REMOVED
 
     def acl_get_rule(self, rule_id):
@@ -133,7 +134,9 @@ class ACLSwitchAPI:
         rule_ids = self._pol_man.policy_get_rules(policy)
         rules = []
         for r_id in rule_ids:
-            rules.append(self.acl_get_rule(r_id))
+            rule = self.acl_get_rule(r_id)
+            if rule.time_enforce == "N/A":
+                rules.append(rule)
         self._flow_man.flow_deploy_multiple_rules(switch_id, rules)
         return ReturnStatus.POLICY_ASSIGNED
 

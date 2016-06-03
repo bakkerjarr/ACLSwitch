@@ -121,6 +121,7 @@ class ACLSwitchREST(ControllerBase):
             error = self._MSG_ERROR.copy()
             error["error"] = "Unable to parse JSON."
             return Response(status=400, body=json.dumps(error))
+        # TODO Dict might not contain "rule", catch this with try except
         return_status = self._api.acl_create_rule(rule_req["rule"])
         return self._api_response(return_status)
 
@@ -236,13 +237,13 @@ class ACLSwitchREST(ControllerBase):
         :return: The Response object.
         """
         if return_status == ReturnStatus.POLICY_EXISTS:
-            status = 400
-            body = self._MSG_WARNING.copy()
-            body["warning"] = "The policy domain already exists."
+            status = 200
+            body = self._MSG_INFO.copy()
+            body["info"] = "The policy domain already exists."
         elif return_status == ReturnStatus.POLICY_NOT_EXISTS:
-            status = 400
-            body = self._MSG_WARNING.copy()
-            body["warning"] = "The policy domain does not exist."
+            status = 200
+            body = self._MSG_INFO.copy()
+            body["info"] = "The policy domain does not exist."
         elif return_status == ReturnStatus.POLICY_CREATED:
             status = 200
             body = self._MSG_INFO.copy()
@@ -252,36 +253,36 @@ class ACLSwitchREST(ControllerBase):
             body = self._MSG_INFO.copy()
             body["info"] = "Policy domain removed."
         elif return_status == ReturnStatus.POLICY_NOT_EMPTY:
-            status = 400
-            body = self._MSG_WARNING.copy()
-            body["warning"] = "The policy domain cannot be removed as " \
-                              "it has rules associated with it."
+            status = 200
+            body = self._MSG_INFO.copy()
+            body["info"] = "The policy domain cannot be removed as " \
+                           "it has rules associated with it."
         elif return_status == ReturnStatus.POLICY_ASSIGNED:
             status = 200
             body = self._MSG_INFO.copy()
             body["info"] = "Policy domain assigned to the switch."
         elif return_status == ReturnStatus.POLICY_NOT_ASSIGNED:
-            status = 400
-            body = self._MSG_WARNING.copy()
-            body["warning"] = "The policy domain is not assigned to " \
-                              "the switch."
+            status = 200
+            body = self._MSG_INFO.copy()
+            body["info"] = "The policy domain is not assigned to " \
+                           "the switch."
         elif return_status == ReturnStatus.POLICY_ALREADY_ASSIGNED:
-            status = 400
-            body = self._MSG_WARNING.copy()
-            body["warning"] = "The policy domain is already assigned " \
-                              "to the switch."
+            status = 200
+            body = self._MSG_INFO.copy()
+            body["info"] = "The policy domain is already assigned " \
+                           "to the switch."
         elif return_status == ReturnStatus.POLICY_REVOKED:
             status = 200
             body = self._MSG_INFO.copy()
             body["info"] = "Policy domain revoked from the switch."
         elif return_status == ReturnStatus.RULE_EXISTS:
-            status = 400
-            body = self._MSG_WARNING.copy()
-            body["warning"] = "The ACL rule already exists."
+            status = 200
+            body = self._MSG_INFO.copy()
+            body["info"] = "The ACL rule already exists."
         elif return_status == ReturnStatus.RULE_NOT_EXISTS:
-            status = 400
-            body = self._MSG_WARNING.copy()
-            body["warning"] = "The ACL rule does not exists."
+            status = 200
+            body = self._MSG_INFO.copy()
+            body["info"] = "The ACL rule does not exists."
         elif return_status == ReturnStatus.RULE_CREATED:
             status = 200
             body = self._MSG_INFO.copy()
@@ -291,13 +292,13 @@ class ACLSwitchREST(ControllerBase):
             body = self._MSG_INFO.copy()
             body["info"] = "ACL rule removed."
         elif return_status == ReturnStatus.RULE_SYNTAX_INVALID:
-            status = 400
-            body = self._MSG_ERROR.copy()
-            body["error"] = "Incorrect ACL rule syntax."
+            status = 200
+            body = self._MSG_INFO.copy()
+            body["info"] = "Incorrect ACL rule syntax."
         elif return_status == ReturnStatus.SWITCH_NOT_EXISTS:
-            status = 400
-            body = self._MSG_WARNING.copy()
-            body["warning"] = "The switch does not exist."
+            status = 200
+            body = self._MSG_INFO.copy()
+            body["info"] = "The switch does not exist."
         else:
             status = 500
             body = self._MSG_CRITICAL.copy()
