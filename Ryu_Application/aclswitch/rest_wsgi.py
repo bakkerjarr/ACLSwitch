@@ -14,6 +14,7 @@
 
 # ACLSwitch modules
 from aclswitch_api import ReturnStatus
+import json_templates
 
 # Module imports
 from ryu.app.wsgi import ControllerBase
@@ -50,8 +51,6 @@ class ACLSwitchREST(ControllerBase):
         super(ACLSwitchREST, self).__init__(req, link, data, **config)
         self._acl_switch_inst = data[self._INSTANCE_NAME_CONTR]
         self._api = data[self._INSTANCE_NAME_ASW_API]
-
-    # TODO need to handle cases where the client sends JSON that we don't recognise.
 
     ######
     ### General ACLSwitch endpoints
@@ -117,11 +116,13 @@ class ACLSwitchREST(ControllerBase):
         """
         try:
             rule_req = json.loads(req.body)
-        except ValueError:
+            if not json_templates.check_rule_creation_json(rule_req[
+                                                               "rule"]):
+                raise KeyError
+        except (ValueError, KeyError):
             error = self._MSG_ERROR.copy()
-            error["error"] = "Unable to parse JSON."
+            error["error"] = "Invalid rule creation JSON passed."
             return Response(status=400, body=json.dumps(error))
-        # TODO Dict might not contain "rule", catch this with try except
         return_status = self._api.acl_create_rule(rule_req["rule"])
         return self._api_response(return_status)
 
@@ -133,8 +134,12 @@ class ACLSwitchREST(ControllerBase):
         """
         try:
             rule_req = json.loads(req.body)
-        except ValueError:
-            return Response(status=400, body="Unable to parse JSON.")
+            if not json_templates.check_rule_removal_json(rule_req):
+                raise KeyError
+        except (ValueError, KeyError):
+            error = self._MSG_ERROR.copy()
+            error["error"] = "Invalid rule removal JSON passed."
+            return Response(status=400, body=json.dumps(error))
         return_status = self._api.acl_remove_rule(rule_req["rule_id"])
         return self._api_response(return_status)
 
@@ -162,8 +167,13 @@ class ACLSwitchREST(ControllerBase):
         """
         try:
             policy_req = json.loads(req.body)
-        except ValueError:
-            return Response(status=400, body="Unable to parse JSON.")
+            if not json_templates.check_policy_json(policy_req):
+                raise KeyError
+        except (ValueError, KeyError):
+            error = self._MSG_ERROR.copy()
+            error["error"] = "Invalid policy domain creation JSON " \
+                             "passed."
+            return Response(status=400, body=json.dumps(error))
         return_status = self._api.policy_create(policy_req["policy"])
         return self._api_response(return_status)
 
@@ -175,8 +185,12 @@ class ACLSwitchREST(ControllerBase):
         """
         try:
             policy_req = json.loads(req.body)
-        except ValueError:
-            return Response(status=400, body="Unable to parse JSON.")
+            if not json_templates.check_policy_json(policy_req):
+                raise KeyError
+        except (ValueError, KeyError):
+            error = self._MSG_ERROR.copy()
+            error["error"] = "Invalid policy domain removal JSON passed."
+            return Response(status=400, body=json.dumps(error))
         return_status = self._api.policy_remove(policy_req["policy"])
         return self._api_response(return_status)
 
@@ -188,8 +202,14 @@ class ACLSwitchREST(ControllerBase):
         """
         try:
             policy_assign_req = json.loads(req.body)
-        except ValueError:
-            return Response(status=400, body="Unable to parse JSON.")
+            if not json_templates.check_policy_assign_json(
+                    policy_assign_req):
+                raise KeyError
+        except (ValueError, KeyError):
+            error = self._MSG_ERROR.copy()
+            error["error"] = "Invalid policy domain assignment JSON " \
+                             "passed."
+            return Response(status=400, body=json.dumps(error))
         return_status = self._api.policy_assign_switch(
             policy_assign_req["switch_id"], policy_assign_req["policy"])
         return self._api_response(return_status)
@@ -202,8 +222,14 @@ class ACLSwitchREST(ControllerBase):
         """
         try:
             policy_revoke_req = json.loads(req.body)
-        except ValueError:
-            return Response(status=400, body="Unable to parse JSON.")
+            if not json_templates.check_policy_assign_json(
+                    policy_revoke_req):
+                raise KeyError
+        except (ValueError, KeyError):
+            error = self._MSG_ERROR.copy()
+            error["error"] = "Invalid policy domain assignment revoke " \
+                             "JSON passed."
+            return Response(status=400, body=json.dumps(error))
         return_status = self._api.policy_revoke_switch(
             policy_revoke_req["switch_id"], policy_revoke_req["policy"])
         return self._api_response(return_status)

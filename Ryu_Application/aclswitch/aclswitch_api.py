@@ -28,10 +28,11 @@ class ACLSwitchAPI:
     """API for modifying and viewing the state of ACLSwitch.
     """
 
-    def __init__(self, logging_config, flow_man):
+    def __init__(self, logging_config, aclsw_version, flow_man):
         """Initialise the API class.
 
         :param logging_config: Logging configuration dict.
+        :param aclsw_version: The current version of ACLSwitch.
         :param flow_man: FlowManager object.
         """
         self._logging = logging.getLogger(__name__)
@@ -39,6 +40,7 @@ class ACLSwitchAPI:
         self._logging.propagate = logging_config["propagate"]
         self._logging.addHandler(logging_config["handler"])
         self._logging.info("Initialising API...")
+        self._aclsw_version = aclsw_version
         self._flow_man = flow_man
         self._acl_man = ACLManager(logging_config)
         self._pol_man = PolicyManager(logging_config)
@@ -186,7 +188,8 @@ class ACLSwitchAPI:
         """
         return {"num_rules": self._acl_man.get_num_rules(),
                 "num_policies": self._pol_man.get_num_policies(),
-                "num_switches": self._pol_man.get_num_switches()}
+                "num_switches": self._pol_man.get_num_switches(),
+                "version": self._aclsw_version}
 
     def get_all_policies(self):
         """Fetch and return a dict of policies and the rules that are

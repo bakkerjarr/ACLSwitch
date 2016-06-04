@@ -33,7 +33,6 @@ class PolicyManager:
         self._logging.propagate = logging_config["propagate"]
         self._logging.addHandler(logging_config["handler"])
         self._logging.info("Initialising PolicyManager...")
-        # TODO change below to a switch_id dict:set of policies
         self._connected_switches = {}  # switch_id_id:[policy]
         self._policy_to_rules = {}  # policy:[rule_id]
 

@@ -34,6 +34,7 @@ class ACLSwitchCLI(cmd.Cmd):
                         "ACLSwitch."
     MSG_ERR_ACLSW_CON_LOST = "ERROR: Connection with ACLSwitch lost."
     _URL_ACLSW = "http://127.0.0.1:8080/aclswitch"
+    _VERSION = "1.0"
 
     def __init__(self):
         """Initialise the main interface.
@@ -65,6 +66,8 @@ class ACLSwitchCLI(cmd.Cmd):
         info = self._fetch_status()
         if info is None:
             return
+        print("ACLSwitch CLI version: {0}".format(self._VERSION))
+        print("ACLSwitch version: {0}".format(info["version"]))
         print("Number of ACL rules: {0}".format(info["num_rules"]))
         print("Number of policy domains: {0}".format(info[
                                                         "num_policies"]))

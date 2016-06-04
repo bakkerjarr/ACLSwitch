@@ -38,7 +38,7 @@ from flow.flow_manager import FlowManager
 from rest_wsgi import ACLSwitchREST
 
 # Other modules
-from netaddr import IPAddress  # TODO Does Ryu have a friendly packet library
+from netaddr import IPAddress
 import logging
 import os
 
@@ -67,6 +67,7 @@ class ACLSwitch(ABCRyuApp):
     # An api call to the controller. ACLSwitch should have no idea what
     # what other apps have what table IDS, just what table to forward
     # entries onto.
+    _VERSION = "1.0"
 
     def __init__(self, contr):
         # Load config
@@ -95,7 +96,8 @@ class ACLSwitch(ABCRyuApp):
 
         # Create objects to manage different features
         self._flow_man = FlowManager(self, logging_config)
-        self._api = ACLSwitchAPI(logging_config, self._flow_man)
+        self._api = ACLSwitchAPI(logging_config, self._VERSION,
+                                 self._flow_man)
 
         self._api.policy_create(self._POLICY_DEFAULT)
 
