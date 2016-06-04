@@ -1,0 +1,12 @@
+#
+# Policy declarations for ACLSwitch
+#
+# This file is used to specify policies and is loaded on application
+# start up.
+#
+# To specify a policy use:
+#   {"policy":"<policy name here>"}
+#
+
+{"policy":"test1"}
+{"policy":"test2"}
