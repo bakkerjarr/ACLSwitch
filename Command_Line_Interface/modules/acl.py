@@ -275,10 +275,10 @@ class ACL(cmd.Cmd):
         :param acl: The ACL as an unordered dict.
         """
         acl_ids = sorted(acl, key=lambda rule_id: int(rule_id))
-        table = PrettyTable(["Rule ID", "Source Address",
-                             "Destination Address", "Transport Protocol",
-                             "Source Port", "Destination Port", "Policy",
-                             "Action", "Start Time", "Duration(min)"])
+        table = PrettyTable(["Rule ID", "Source IP", "Destination IP",
+                             "Transport Protocol", "Source Port",
+                             "Destination Port", "Policy", "Action",
+                             "Start Time", "Duration(sec)"])
         for key in acl_ids:
             rule = acl[key]
             if rule["time_enforce"] == "N/A":
