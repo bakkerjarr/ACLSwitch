@@ -77,10 +77,11 @@ class ConfigLoader:
                     continue
                 self._logging.debug("Read policy: %s", policy)
                 policies.append(policy["policy"])
-            buf_in.close()
         except IOError:
             self._logging.error("Unable to read from file: %s",
                                 self._policy_file)
+        finally:
+            buf_in.close()
         return policies
 
     def load_rules(self):
@@ -112,6 +113,8 @@ class ConfigLoader:
         except IOError:
             self._logging.error("Unable to read from file: %s",
                                 self._rule_file)
+        finally:
+            buf_in.close()
         return rules
 
     def load_time_rules(self):
@@ -143,4 +146,6 @@ class ConfigLoader:
         except IOError:
             self._logging.error("Unable to read from file: %s",
                                 self._rule_file)
+        finally:
+            buf_in.close()
         return time_rules
