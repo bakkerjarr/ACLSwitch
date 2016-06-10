@@ -28,4 +28,4 @@ sudo mn -c ;
 
 # Start Mininet with a simple topology of a single OpenFlow switch with 3
 # hosts connected to it.
-sudo mn --topo single,3 --mac --controller remote --switch ovsk,protocols=OpenFlow13 ;
+sudo mn --topo single,3 --mac --controller remote --switch ovsk,protocols=OpenFlow13 --link tc,bw=10,delay=10ms;
