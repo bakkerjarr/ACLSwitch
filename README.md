@@ -30,7 +30,7 @@ Create a bash alias for running ACLSwitch. The example below assumes
 that the ACLSwitch directory cloned from GitHub is located in your home
 directory. 
 ```bash
-alias asw="cd; ryu-manager --verbose ~/ACLSwitch/Ryu_Application/controller.py ;'"
+alias asw="cd; ryu-manager --verbose ~/ACLSwitch/Ryu_Application/controller.py ;"
 ```
 
 ## Repository Background
