@@ -25,7 +25,15 @@ use or modify the code, however the original authors must be respected.
 The open-source nature of the software also means that there is no
 attached warranty. You have been warned!
 
-## Repository Description
+## Running ACLSwitch
+Create a bash alias for running ACLSwitch. The example below assumes
+that the ACLSwitch directory cloned from GitHub is located in your home
+directory. 
+```bash
+alias asw="cd; ryu-manager --verbose ~/ACLSwitch/Ryu_Application/controller.py ;'"
+```
+
+## Repository Background
 ACLSwitch was originally developed as part of a final year Bachelor of
 Engineering Honours project (ENGR489) at Victoria University of
 Wellington in 2015. The original repository contains files that were
