@@ -1,0 +1,18 @@
+# ACLSwitch Policy Domain configuration file
+#
+# Define and assign Policy Domains in this file. Set the values within
+# the policy_domains and pd_assignment keys to Null if no values are
+# desired.
+#
+# Configuration items are parsed in the following order:
+#    - Policy Domains
+#    - ACL rules
+#    - Policy Domain switch assignments
+
+policy_domains:
+  - "test1"
+  - "test2"
+
+pd_assignments:
+  dp1: "test1"
+  dp2: "test2"

@@ -16,6 +16,7 @@
 import json
 import json_templates
 import logging
+import yaml
 
 __author__ = "Jarrod N. Bakker"
 __status__ = "Development"
@@ -24,6 +25,8 @@ __status__ = "Development"
 class ConfigLoader:
     """An object to load configuration parameters.
     """
+
+    _PD_CONF_KEYS = ["policy_domains", "pd_assignments"]
 
     def __init__(self, policy_file, rule_file, time_rule_file):
         self._policy_file = policy_file
@@ -58,31 +61,45 @@ class ConfigLoader:
         :return: A list of policies to create.
         """
         policies = []
+        pd_assignments = []
         try:
-            buf_in = open(self._policy_file)
-            self._logging.info("Reading config from file: %s",
+            self._logging.info("Loading config from file: %s",
                                self._policy_file)
-            for line in buf_in:
-                if line[0] == "#" or not line.strip():
-                    continue  # Skip file comments and empty lines
-                try:
-                    policy = json.loads(line)
-                except ValueError:
-                    self._logging.warning("%s could not be parsed as "
-                                          "JSON.", line)
-                    continue
-                if not json_templates.check_policy_json(policy):
-                    self._logging.warning("%s is not valid policy "
-                                          "JSON", policy)
-                    continue
-                self._logging.debug("Read policy: %s", policy)
-                policies.append(policy["policy"])
+            buf_in = open(self._policy_file)
+            pd_yaml = yaml.load(buf_in)
         except IOError:
             self._logging.error("Unable to read from file: %s",
                                 self._policy_file)
+            return policies  # We should return an empty list
         finally:
             buf_in.close()
-        return policies
+        # Does the config file contain the expected keys?
+        if pd_yaml is None:
+            self._logging.error("The following keys were not in %s: %s",
+                                self._policy_file, ", ".join(
+                                    self._PD_CONF_KEYS))
+            return policies
+        missing_keys = []
+        for key in self._PD_CONF_KEYS:
+            if key not in pd_yaml:
+                missing_keys.append(key)
+        if len(missing_keys) != 0:
+            self._logging.error("The following keys were not in %s: %s",
+                                self._policy_file, ", ".join(
+                                    missing_keys))
+            return policies
+        # Copy declared policy domains into a list
+        for policy in pd_yaml["policy_domains"]:
+            if policy is not None:
+                self._logging.debug("Policy Domain: %s", policy)
+                policies.append(policy)
+        # Read in policy assignments
+        for assignment in pd_yaml["pd_assignments"]:
+            if assignment is not None:
+                self._logging.debug("Policy Domain assignment: %s",
+                                    str(assignment))
+                pd_assignments.append(pd_assignments)
+        return policies  # TODO return PD assignments
 
     def load_rules(self):
         """Load the rules from file.

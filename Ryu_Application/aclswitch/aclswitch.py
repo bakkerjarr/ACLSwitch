@@ -51,7 +51,7 @@ class ACLSwitch(ABCRyuApp):
     """
 
     _APP_NAME = "ACLSwitch"
-    _CONFIG_POLICIES_FILE_NAME = "policies.json"
+    _CONFIG_POLICIES_FILE_NAME = "policy_domains.yaml"
     _CONFIG_RULE_FILE_NAME = "rules.json"
     _CONFIG_TIME_RULE_FILE_NAME = "time_rules.json"
     _EXPECTED_HANDLERS = (EventOFPSwitchFeatures.__name__, )
