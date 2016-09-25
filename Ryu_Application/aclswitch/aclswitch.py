@@ -51,9 +51,8 @@ class ACLSwitch(ABCRyuApp):
     """
 
     _APP_NAME = "ACLSwitch"
-    _CONFIG_POLICIES_FILE_NAME = "policies.json"
-    _CONFIG_RULE_FILE_NAME = "rules.json"
-    _CONFIG_TIME_RULE_FILE_NAME = "time_rules.json"
+    _CONFIG_POLICIES_FILE_NAME = "policy_domains.yaml"
+    _CONFIG_RULE_FILE_NAME = "acl_rules.yaml"
     _EXPECTED_HANDLERS = (EventOFPSwitchFeatures.__name__, )
     _INSTANCE_NAME_ASW_API = "asw_api"
     # Default priority is defined to be in the middle (0x8000 in 1.3)
@@ -75,9 +74,7 @@ class ACLSwitch(ABCRyuApp):
         self._config = ConfigLoader(path_to_config +
                                     self._CONFIG_POLICIES_FILE_NAME,
                                     path_to_config +
-                                    self._CONFIG_RULE_FILE_NAME,
-                                    path_to_config +
-                                    self._CONFIG_TIME_RULE_FILE_NAME)
+                                    self._CONFIG_RULE_FILE_NAME)
         # Set logging
         logging_config = self._config.get_logging_config()
         self._logging = logging.getLogger(__name__)
@@ -105,12 +102,9 @@ class ACLSwitch(ABCRyuApp):
         # TODO Command line argument for custom location for config file
         policies = self._config.load_policies()
         rules = self._config.load_rules()
-        time_rules = self._config.load_time_rules()
         for pol in policies:
             self._api.policy_create(pol)
         for rule in rules:
-            self._api.acl_create_rule(rule)
-        for rule in time_rules:
             self._api.acl_create_rule(rule)
 
         # Register REST WSGI through the controller app

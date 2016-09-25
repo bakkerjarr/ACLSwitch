@@ -14,7 +14,7 @@
 
 # ACLSwitch modules
 from aclswitch_api import ReturnStatus
-import json_templates
+import data_templates
 
 # Module imports
 from ryu.app.wsgi import ControllerBase
@@ -116,7 +116,7 @@ class ACLSwitchREST(ControllerBase):
         """
         try:
             rule_req = json.loads(req.body)
-            if not json_templates.check_rule_creation_json(rule_req[
+            if not data_templates.check_rule_creation_json(rule_req[
                                                                "rule"]):
                 raise KeyError
         except (ValueError, KeyError):
@@ -134,7 +134,7 @@ class ACLSwitchREST(ControllerBase):
         """
         try:
             rule_req = json.loads(req.body)
-            if not json_templates.check_rule_removal_json(rule_req):
+            if not data_templates.check_rule_removal_json(rule_req):
                 raise KeyError
         except (ValueError, KeyError):
             error = self._MSG_ERROR.copy()
@@ -167,7 +167,7 @@ class ACLSwitchREST(ControllerBase):
         """
         try:
             policy_req = json.loads(req.body)
-            if not json_templates.check_policy_json(policy_req):
+            if not data_templates.check_policy_json(policy_req):
                 raise KeyError
         except (ValueError, KeyError):
             error = self._MSG_ERROR.copy()
@@ -185,7 +185,7 @@ class ACLSwitchREST(ControllerBase):
         """
         try:
             policy_req = json.loads(req.body)
-            if not json_templates.check_policy_json(policy_req):
+            if not data_templates.check_policy_json(policy_req):
                 raise KeyError
         except (ValueError, KeyError):
             error = self._MSG_ERROR.copy()
@@ -202,7 +202,7 @@ class ACLSwitchREST(ControllerBase):
         """
         try:
             policy_assign_req = json.loads(req.body)
-            if not json_templates.check_policy_assign_json(
+            if not data_templates.check_policy_assign_json(
                     policy_assign_req):
                 raise KeyError
         except (ValueError, KeyError):
@@ -222,7 +222,7 @@ class ACLSwitchREST(ControllerBase):
         """
         try:
             policy_revoke_req = json.loads(req.body)
-            if not json_templates.check_policy_assign_json(
+            if not data_templates.check_policy_assign_json(
                     policy_revoke_req):
                 raise KeyError
         except (ValueError, KeyError):
