@@ -50,7 +50,10 @@ class Switch:
         :param policy: The policy to revoke.
         :return: True if successful, False otherwise.
         """
-        pass
+        if policy not in self._policies:
+            return False
+        self._policies.remove(policy)
+        return True
 
     def get_policies(self):
         """Return the list of assigned policies for this switch.
