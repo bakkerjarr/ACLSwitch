@@ -121,11 +121,24 @@ class ACLSwitchAPI:
         self._pol_man.policy_remove(policy)
         return ReturnStatus.POLICY_REMOVED
 
-    def policy_assign_switch(self, switch_id, policy):
-        """Assign a policy to a switch.
+    def policy_assign_switch(self, switch_id, policy, from_file=False):
+        """Assign a policy to a switch assuming it has been registered.
+
+        The switch does not have to exist if the assignment
+        declaration is specified in a file. This does mean that the
+        application could me DoSed by having many fake switches
+        specified, however the benefit is that assignments can be
+        specified in a file and loaded on application start-up. Such
+        declarations result in switches being registered with the
+        policy manager before they connect to controller. Care must
+        then be taken to not send out flow table entries to the 'fake'
+        switch. This functionality does not exist when the declaration
+        is passed by the REST WSGI.
 
         :param switch_id: Switch identifier, typically the datapath ID.
         :param policy: Name of the policy to assign.
+        :param from_file: False if the declaration came from the WSGI,
+        True if it was specified in a file.
         """
         if not self._pol_man.switch_exists(switch_id):
             return ReturnStatus.SWITCH_NOT_EXISTS
@@ -133,13 +146,16 @@ class ACLSwitchAPI:
             return ReturnStatus.POLICY_NOT_EXISTS
         if not self._pol_man.switch_assign_policy(switch_id, policy):
             return ReturnStatus.POLICY_ALREADY_ASSIGNED
-        rule_ids = self._pol_man.policy_get_rules(policy)
-        rules = []
-        for r_id in rule_ids:
-            rule = self.acl_get_rule(r_id)
-            if rule.time_enforce == "N/A":
-                rules.append(rule)
-        self._flow_man.flow_deploy_multiple_rules(switch_id, rules)
+        if not from_file and self._pol_man.switch_is_connected(
+                switch_id):
+            # Do not send out the rules if the switch has not connected.
+            rule_ids = self._pol_man.policy_get_rules(policy)
+            rules = []
+            for r_id in rule_ids:
+                rule = self.acl_get_rule(r_id)
+                if rule.time_enforce == "N/A":
+                    rules.append(rule)
+            self._flow_man.flow_deploy_multiple_rules(switch_id, rules)
         return ReturnStatus.POLICY_ASSIGNED
 
     def policy_revoke_switch(self, switch_id, policy):
@@ -154,11 +170,14 @@ class ACLSwitchAPI:
             return ReturnStatus.POLICY_NOT_EXISTS
         if not self._pol_man.switch_revoke_policy(switch_id, policy):
             return ReturnStatus.POLICY_NOT_ASSIGNED
-        rule_ids = self._pol_man.policy_get_rules(policy)
-        rules = []
-        for r_id in rule_ids:
-            rules.append(self.acl_get_rule(r_id))
-        self._flow_man.flow_remove_multiple_rules(switch_id, rules)
+        if self._pol_man.switch_is_connected(switch_id):
+            # Do not send out removal messages to switches that have
+            # not connected.
+            rule_ids = self._pol_man.policy_get_rules(policy)
+            rules = []
+            for r_id in rule_ids:
+                rules.append(self.acl_get_rule(r_id))
+            self._flow_man.flow_remove_multiple_rules(switch_id, rules)
         return ReturnStatus.POLICY_REVOKED
 
     def policy_get_switches(self, policy):
@@ -169,16 +188,35 @@ class ACLSwitchAPI:
         """
         return self._pol_man.policy_get_switches(policy)
 
-    def switch_connect(self, switch_id):
-        """A switch has connected to the network, inform the policy
-        manager.
+    def switch_register(self, switch_id):
+        """Register a switch with the policy manager.
 
-        :param switch_id:
+        :param switch_id: Switch identifier, typically the datapath ID.
+        :return: A return status.
         """
-        if self._pol_man.switch_connect(switch_id):
-            return ReturnStatus.SWITCH_CREATED
+        if self._pol_man.switch_register(switch_id):
+            return ReturnStatus.SWITCH_REGISTERED
         else:
             return ReturnStatus.SWITCH_EXISTS
+
+    def switch_connect(self, switch_id):
+        """Inform the policy manager that a switch has connected.
+
+        :param switch_id: Switch identifier, typically the datapath ID.
+        :return: A return status.
+        """
+        if self._pol_man.switch_connect(switch_id):
+            rules = []
+            for policy in self._pol_man.switch_get_policies(switch_id):
+                rule_ids = self._pol_man.policy_get_rules(policy)
+                for r_id in rule_ids:
+                    rule = self.acl_get_rule(r_id)
+                    if rule.time_enforce == "N/A":
+                        rules.append(rule)
+            self._flow_man.flow_deploy_multiple_rules(switch_id, rules)
+            return ReturnStatus.SWITCH_CONNECTED
+        else:
+            return ReturnStatus.SWITCH_NOT_REGISTERED
 
     def get_aclswitch_info(self):
         """Fetch and return a dict containing a summary of the state
@@ -242,4 +280,6 @@ class ReturnStatus:
     RULE_SYNTAX_INVALID = 24
     SWITCH_EXISTS = 30
     SWITCH_NOT_EXISTS = 31
-    SWITCH_CREATED = 32
+    SWITCH_REGISTERED = 32
+    SWITCH_NOT_REGISTERED = 33
+    SWITCH_CONNECTED = 34

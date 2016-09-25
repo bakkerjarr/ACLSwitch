@@ -14,5 +14,7 @@ policy_domains:
   - "test2"
 
 pd_assignments:
-  dp1: "test1"
-  dp2: "test2"
+  - switch_id: 1
+    policy: "test1"
+  - switch_id: 2
+    policy: "test2"

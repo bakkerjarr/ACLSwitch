@@ -27,9 +27,9 @@ _POLICY_ASSIGN = ("switch_id", "policy")
 
 
 def check_rule_creation_json(rule):
-    """Check that rule creation JSON is formatted correctly.
+    """Check that rule creation data is formatted correctly.
 
-    :param rule: Rule JSON to check.
+    :param rule: Rule dict to check.
     :return: True if valid, False otherwise.
     """
     for key in _RULE_CREATE:
@@ -46,9 +46,9 @@ def check_rule_creation_json(rule):
 
 
 def check_rule_removal_json(rule):
-    """Check that rule removal JSON is formatted correctly.
+    """Check that rule removal data is formatted correctly.
 
-    :param rule: Rule JSON to check.
+    :param rule: Rule dict to check.
     :return: True if valid, False otherwise.
     """
     if len(rule) != len(_RULE_REMOVE):
@@ -60,10 +60,10 @@ def check_rule_removal_json(rule):
 
 
 def check_policy_json(policy):
-    """Check that policy domain creation JSON is formatted
+    """Check that policy domain creation data is formatted
     correctly. This can aso be used for policy domain removal.
 
-    :param policy: Policy JSON to check.
+    :param policy: Policy dict to check.
     :return: True if valid, False otherwise.
     """
     if len(policy) != len(_POLICY):
@@ -75,11 +75,11 @@ def check_policy_json(policy):
 
 
 def check_policy_assign_json(policy_assign):
-    """Check that policy domain assignment JSON is formatted
+    """Check that policy domain assignment data is formatted
     correctly. This can also be used for messages that revoke
     assignments.
 
-    :param policy_assign: Policy assignment JSON to check.
+    :param policy_assign: Policy assignment dict to check.
     :return: True if valid, False otherwise.
     """
     if len(policy_assign) != len(_POLICY_ASSIGN):
