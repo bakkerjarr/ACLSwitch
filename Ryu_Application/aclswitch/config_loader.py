@@ -94,11 +94,16 @@ class ConfigLoader:
         if pd_yaml["pd_assignments"] is not None:
             for assignment in pd_yaml["pd_assignments"]:
                 if assignment is not None:
+                    if not data_templates.check_policy_assign_json(
+                            assignment):
+                        self._logging.warning("%s is not formatted "
+                                              "correctly.", assignment)
+                        continue
                     self._logging.debug("Reading Policy Domain "
                                         "assignment: %s",
                                         str(assignment))
-                    pd_assignments.append(pd_assignments)
-        return policies  # TODO return PD assignments
+                    pd_assignments.append(assignment)
+        return policies, pd_assignments
 
     def load_rules(self):
         """Load the rules from file.
@@ -124,7 +129,8 @@ class ConfigLoader:
         if rule_yaml["acl_rules"] is not None:
             for rule in rule_yaml["acl_rules"]:
                 if not data_templates.check_rule_creation_json(rule):
-                    self._logging.warning("%s is not valid rule: ", rule)
+                    self._logging.warning("%s is not formatted "
+                                          "correctly.", rule)
                     continue
                 self._logging.debug("Reading ACL rule: %s", rule)
                 rules.append(rule)
