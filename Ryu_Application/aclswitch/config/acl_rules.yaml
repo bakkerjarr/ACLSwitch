@@ -2,7 +2,7 @@
 #
 # Define ACL rules
 #
-# Configuration items are parsed in the following order:
+# Configuration items are loaded in the following order:
 #    - Policy Domains
 #    - ACL rules
 #    - Policy Domain switch assignments
