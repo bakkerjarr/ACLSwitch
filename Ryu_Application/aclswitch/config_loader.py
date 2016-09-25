@@ -14,8 +14,9 @@
 
 # Module imports
 import json
-import json_templates
+import data_templates
 import logging
+import sys
 import yaml
 
 __author__ = "Jarrod N. Bakker"
@@ -27,11 +28,17 @@ class ConfigLoader:
     """
 
     _PD_CONF_KEYS = ["policy_domains", "pd_assignments"]
+    _ACL_RULE_CONF_KEYS = ["acl_rules"]
 
-    def __init__(self, policy_file, rule_file, time_rule_file):
+    def __init__(self, policy_file, rule_file):
+        """Initialise ACLSwitch configuration loader.
+
+        :param policy_file: Path to the Policy Domain declaration and
+        assignment file.
+        :param rule_file: Path to the ACL rule declaration file.
+        """
         self._policy_file = policy_file
         self._rule_file = rule_file
-        self._time_rule_file = time_rule_file
         # Logging configuration
         min_lvl = logging.DEBUG
         console_handler = logging.StreamHandler()
@@ -65,40 +72,32 @@ class ConfigLoader:
         try:
             self._logging.info("Loading config from file: %s",
                                self._policy_file)
-            buf_in = open(self._policy_file)
-            pd_yaml = yaml.load(buf_in)
+            with open(self._policy_file) as buf_in:
+                pd_yaml = yaml.load(buf_in)
         except IOError:
             self._logging.error("Unable to read from file: %s",
                                 self._policy_file)
             return policies  # We should return an empty list
-        finally:
-            buf_in.close()
-        # Does the config file contain the expected keys?
-        if pd_yaml is None:
-            self._logging.error("The following keys were not in %s: %s",
-                                self._policy_file, ", ".join(
-                                    self._PD_CONF_KEYS))
-            return policies
-        missing_keys = []
-        for key in self._PD_CONF_KEYS:
-            if key not in pd_yaml:
-                missing_keys.append(key)
-        if len(missing_keys) != 0:
-            self._logging.error("The following keys were not in %s: %s",
-                                self._policy_file, ", ".join(
-                                    missing_keys))
-            return policies
-        # Copy declared policy domains into a list
-        for policy in pd_yaml["policy_domains"]:
-            if policy is not None:
-                self._logging.debug("Policy Domain: %s", policy)
-                policies.append(policy)
-        # Read in policy assignments
-        for assignment in pd_yaml["pd_assignments"]:
-            if assignment is not None:
-                self._logging.debug("Policy Domain assignment: %s",
-                                    str(assignment))
-                pd_assignments.append(pd_assignments)
+        # Perform a configuration file key check
+        if not self._check_conf_keys(pd_yaml, self._PD_CONF_KEYS,
+                                     self._policy_file):
+            sys.exit("Please correct configuration file: {0}".format(
+                self._policy_file))
+        # Copy declared policy domains into a list, if there are any
+        if pd_yaml["policy_domains"] is not None:
+            for policy in pd_yaml["policy_domains"]:
+                if policy is not None:
+                    self._logging.debug("Reading Policy Domain: %s",
+                                        policy)
+                    policies.append(policy)
+        # Read in policy assignments, if there are any
+        if pd_yaml["pd_assignments"] is not None:
+            for assignment in pd_yaml["pd_assignments"]:
+                if assignment is not None:
+                    self._logging.debug("Reading Policy Domain "
+                                        "assignment: %s",
+                                        str(assignment))
+                    pd_assignments.append(pd_assignments)
         return policies  # TODO return PD assignments
 
     def load_rules(self):
@@ -108,61 +107,50 @@ class ConfigLoader:
         """
         rules = []
         try:
-            buf_in = open(self._rule_file)
-            self._logging.info("Reading config from file: %s",
+            self._logging.info("Loading config from file: %s",
                                self._rule_file)
-            for line in buf_in:
-                if line[0] == "#" or not line.strip():
-                    continue  # Skip file comments and empty lines
-                try:
-                    rule = json.loads(line)
-                except ValueError:
-                    self._logging.warning("%s could not be parsed as "
-                                          "JSON.", line)
-                    continue
-                if not json_templates.check_rule_creation_json(rule):
-                    self._logging.warning("%s is not valid rule "
-                                          "JSON", rule)
-                    continue
-                self._logging.debug("Read rule: %s", rule)
-                rules.append(rule)
-            buf_in.close()
+            with open(self._rule_file) as buf_in:
+                rule_yaml = yaml.load(buf_in)
         except IOError:
             self._logging.error("Unable to read from file: %s",
                                 self._rule_file)
-        finally:
-            buf_in.close()
+            return rules  # We should return an empty list
+        # Perform a configuration file key check
+        if not self._check_conf_keys(rule_yaml, self._ACL_RULE_CONF_KEYS,
+                                     self._rule_file):
+            sys.exit("Please correct configuration file: {0}".format(
+                self._rule_file))
+        # Copy declared ACL rules into a list, if there are any
+        if rule_yaml["acl_rules"] is not None:
+            for rule in rule_yaml["acl_rules"]:
+                if not data_templates.check_rule_creation_json(rule):
+                    self._logging.warning("%s is not valid rule: ", rule)
+                    continue
+                self._logging.debug("Reading ACL rule: %s", rule)
+                rules.append(rule)
         return rules
 
-    def load_time_rules(self):
-        """Load the time enforced rules from file.
+    def _check_conf_keys(self, conf_yaml, conf_keys, conf_file):
+        """Check that some parsed configuration YAML contains the
+        expected high-level keys.
 
-        :return: A list of time enforced rules to create.
+        :param conf_yaml: The parsed YAML to check.
+        :param conf_keys: The expected high-level YAML keys.
+        :param conf_file: The file the configuration was read from.
+        :return: True if all keys exist, False otherwise.
         """
-        time_rules = []
-        try:
-            buf_in = open(self._time_rule_file)
-            self._logging.info("Reading config from file: %s",
-                               self._time_rule_file)
-            for line in buf_in:
-                if line[0] == "#" or not line.strip():
-                    continue  # Skip file comments and empty lines
-                try:
-                    rule = json.loads(line)
-                except ValueError:
-                    self._logging.warning("%s could not be parsed as "
-                                          "JSON.", line)
-                    continue
-                if not json_templates.check_rule_creation_json(rule):
-                    self._logging.warning("%s is not valid time rule "
-                                          "JSON", rule)
-                    continue
-                self._logging.debug("Read rule: %s", rule)
-                time_rules.append(rule)
-            buf_in.close()
-        except IOError:
-            self._logging.error("Unable to read from file: %s",
-                                self._rule_file)
-        finally:
-            buf_in.close()
-        return time_rules
+        # Does the config file contain the expected keys?
+        if conf_yaml is None:
+            self._logging.critical("The following keys were not in %s: "
+                                   "%s", conf_file, ", ".join(conf_keys))
+            return False
+        missing_keys = []
+        for key in conf_keys:
+            if key not in conf_yaml:
+                missing_keys.append(key)
+        if len(missing_keys) != 0:
+            self._logging.critical("The following keys were not in %s: "
+                                   "%s", conf_file, ", ".join(
+                                                           missing_keys))
+            return False
+        return True

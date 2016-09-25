@@ -1,0 +1,62 @@
+# ACLSwitch ACL rule configuration file
+#
+# Define ACL rules
+#
+# Configuration items are parsed in the following order:
+#    - Policy Domains
+#    - ACL rules
+#    - Policy Domain switch assignments
+
+acl_rules:
+  - "ip_src": "10.0.0.1"
+    "ip_dst": "10.0.0.2"
+    "tp_proto": "*"
+    "port_src": "*"
+    "port_dst": "*"
+    "policy": "default"
+    "action": "drop"
+  - "ip_src": "10.0.0.1"
+    "ip_dst": "10.0.0.3"
+    "tp_proto": "tcp"
+    "port_src": "*"
+    "port_dst": "*"
+    "policy": "test1"
+    "action": "drop"
+  - "ip_src": "10.0.0.1"
+    "ip_dst": "10.0.0.3"
+    "tp_proto": "*"
+    "port_src": "*"
+    "port_dst": "*"
+    "policy": "default"
+    "action": "allow"
+  - "ip_src": "10.0.0.3"
+    "ip_dst": "10.0.0.1"
+    "tp_proto": "*"
+    "port_src": "*"
+    "port_dst": "*"
+    "policy": "default"
+    "action": "allow"
+  - "ip_src": "10.0.0.1"
+    "ip_dst": "10.0.0.2"
+    "tp_proto": "tcp"
+    "port_src": "*"
+    "port_dst": "81"
+    "policy": "default"
+    "action": "drop"
+    "time_enforce": ["12:00",60]
+  - "ip_src": "10.0.0.1"
+    "ip_dst": "10.0.0.2"
+    "tp_proto": "tcp"
+    "port_src": "*"
+    "port_dst": "82"
+    "policy": "default"
+    "action": "drop"
+    "time_enforce": ["11:00",60]
+  - "ip_src": "10.0.0.1"
+    "ip_dst": "10.0.0.2"
+    "tp_proto": "tcp"
+    "port_src": "*"
+    "port_dst": "83"
+    "policy": "default"
+    "action": "drop"
+    "time_enforce": ["13:00",60]
