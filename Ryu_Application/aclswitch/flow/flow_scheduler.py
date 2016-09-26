@@ -230,7 +230,8 @@ class FlowScheduler:
             # Distribute the rules that need to be distributed now
             for rule_id in to_dist:
                 rule = self._api.acl_get_rule(rule_id)
-                switches = self._api.policy_get_switches(rule.policy)
+                switches = self._api.policy_get_connected_switches(
+                    rule.policy)
                 self._flow_man.flow_deploy_single_rule(rule, switches)
 
             # Pause for moment to avoid flooding the switch with flow
