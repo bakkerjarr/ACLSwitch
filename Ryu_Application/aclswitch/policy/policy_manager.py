@@ -12,6 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+# ACLSwitch modules
+from switch import Switch
+
 # Module imports
 import logging
 
@@ -33,7 +36,7 @@ class PolicyManager:
         self._logging.propagate = logging_config["propagate"]
         self._logging.addHandler(logging_config["handler"])
         self._logging.info("Initialising PolicyManager...")
-        self._connected_switches = {}  # switch_id_id:[policy]
+        self._switches = {}  # switch_id_id:switch
         self._policy_to_rules = {}  # policy:[rule_id]
 
     def policy_create(self, policy):
@@ -63,8 +66,8 @@ class PolicyManager:
                                   "not exist.", policy)
             return False
         # We must revoke the policy from switches that have it assigned
-        for switch_id in self._connected_switches:
-            if policy in self._connected_switches[switch_id]:
+        for switch_id in self._switches:
+            if self._switches[switch_id].has_policy(policy):
                 self.switch_revoke_policy(switch_id, policy)
         del self._policy_to_rules[policy]
         self._logging.info("Removed policy: %s", policy)
@@ -105,14 +108,30 @@ class PolicyManager:
         return self._policy_to_rules[policy]
 
     def policy_get_switches(self, policy):
-        """Return the switch IDs associated with a policy domain.
+        """Return the IDs of switches assigned to a policy domain.
 
         :param policy: Policy domain from which to get switch IDs.
         :return: List of switch IDs.
         """
         switches = []
-        for switch_id in self._connected_switches:
-            if policy in self._connected_switches[switch_id]:
+        for switch_id in self._switches:
+            if self._switches[switch_id].has_policy(policy):
+                switches.append(switch_id)
+        return switches
+
+    def policy_get_connected_switches(self, policy):
+        """Return the IDs os connected switches assigned to a policy
+        domain.
+
+        Note the connected distinction.
+
+        :param policy: Policy domain from which to get switch IDs.
+        :return: List of switch IDs.
+        """
+        switches = []
+        for switch_id in self._switches:
+            switch = self._switches[switch_id]
+            if switch.has_policy(policy) and switch.is_connected():
                 switches.append(switch_id)
         return switches
 
@@ -136,21 +155,46 @@ class PolicyManager:
         self._logging.debug("Rule %s removed from policy %s.",
                             rule_id, policy)
 
+    def switch_register(self, switch_id):
+        """Register a switch with the policy manager.
+
+        Note that a switch may be registered but not connected.
+
+        :param switch_id: Switch identifier, typically the datapath ID.
+        :return: True if the switch has not registered before,
+        False otherwise.
+        """
+        if switch_id in self._switches:
+            self._logging.info("Switch %s already registered.",
+                               switch_id)
+            return False
+        self._switches[switch_id] = Switch(switch_id)
+        self._logging.info("Switch %s registered.", switch_id)
+        return True
+
     def switch_connect(self, switch_id):
         """Inform the policy manager that a switch has connected to
         the network.
 
         :param switch_id: Switch identifier, typically the datapath ID.
-        :return: True if the switch has not been recorded before,
+        :return: True if the switch has not connected before,
         False otherwise.
         """
-        if switch_id in self._connected_switches:
-            self._logging.warning("Switch %s already registered.",
-                                  switch_id)
+        if switch_id not in self._switches:
+            self._logging.info("Switch %s has not been registered.",
+                               switch_id)
             return False
-        self._connected_switches[switch_id] = []
-        self._logging.info("Switch %s registered.", switch_id)
+        self._switches[switch_id].set_connected(True)
+        self._logging.info("Switch %s connected.", switch_id)
         return True
+
+    def switch_is_connected(self, switch_id):
+        """Check if a switch is in a connected state.
+
+        :param switch_id: Switch identifier, typically the datapath ID.
+        :return: True if in connected state, False otherwise.
+        """
+        return self._switches[switch_id].is_connected()
 
     def switch_disconnect(self, switch_id):
         """Inform the policy manager that a switch has disconnected from
@@ -159,8 +203,9 @@ class PolicyManager:
         :param switch_id: Switch identifier, typically the datapath ID.
         :return: True if successful, False otherwise.
         """
-        del self._connected_switches[switch_id]
-        self._logging.info("Switch %s unregistered.", switch_id)
+        # TODO Have a configuration option specify if switch information be deleted on disconnect i.e. they get unregistered.
+        self._switches[switch_id].set_connected(False)
+        self._logging.info("Switch %s disconnected.", switch_id)
         return True
 
     def switch_exists(self, switch_id):
@@ -169,7 +214,7 @@ class PolicyManager:
         :param switch_id: Switch identifier, typically the datapath ID.
         :return: True if it exists, False otherwise.
         """
-        if switch_id in self._connected_switches:
+        if switch_id in self._switches:
             self._logging.debug("Switch %s exists.", switch_id)
             return True
         self._logging.warning("Switch %s does not exist.", switch_id)
@@ -183,11 +228,11 @@ class PolicyManager:
         :return: True if the policy wasn't already assigned,
         False otherwise.
         """
-        if policy in self._connected_switches[switch_id]:
-            self._logging.warning("Switch %s does already has policy "
-                                  "%s assigned.", switch_id, policy)
+        if self._switches[switch_id].has_policy(policy):
+            self._logging.warning("Switch %s already has policy %s "
+                                  "assigned.", switch_id, policy)
             return False
-        self._connected_switches[switch_id].append(policy)
+        self._switches[switch_id].policy_assign(policy)
         self._logging.info("Policy %s assigned to switch %s", policy,
                            switch_id)
         return True
@@ -199,14 +244,22 @@ class PolicyManager:
         :param policy: The policy to revoke.
         :return: True if successful, False otherwise.
         """
-        if policy not in self._connected_switches[switch_id]:
+        if not self._switches[switch_id].has_policy(policy):
             self._logging.warning("Switch %s does not have policy %s "
                                   "assigned.", switch_id, policy)
             return False
-        self._connected_switches[switch_id].remove(policy)
+        self._switches[switch_id].policy_revoke(policy)
         self._logging.info("Policy %s revoked from switch %s", policy,
                            switch_id)
         return True
+
+    def switch_get_policies(self, switch_id):
+        """Fetch the list of policy domains assigned to a switch.
+
+        :param switch_id: Switch identifier, typically the datapath ID.
+        :return: List of policy domains.
+        """
+        return self._switches[switch_id].get_policies()
 
     def get_all_policies(self):
         """Fetch and return a dict of policies and the rules that are
@@ -222,7 +275,11 @@ class PolicyManager:
 
         :return: A dict of switch IDs to a list of policies.
         """
-        return self._connected_switches
+        switch_pol = {}
+        for switch_id in self._switches:
+            switch_pol[switch_id] = self._switches[
+                switch_id].get_policies()
+        return switch_pol
 
     def get_num_policies(self):
         """Return the number of policy domains.
@@ -232,8 +289,8 @@ class PolicyManager:
         return len(self._policy_to_rules)
 
     def get_num_switches(self):
-        """Return the number of connected switches.
+        """Return the number of registered switches.
 
-        :return: The number of connected switches as an int.
+        :return: The number of registered switches as an int.
         """
-        return len(self._connected_switches)
+        return len(self._switches)

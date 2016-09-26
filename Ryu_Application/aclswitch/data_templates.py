@@ -15,76 +15,76 @@
 __author__ = "Jarrod N. Bakker"
 __status__ = "Development"
 
-"""A module for checking that JSON used to passed data is formatted
-correctly.
+"""A module for checking that data used to configure ACLSwitch is
+formatted correctly.
 """
 
-_JSON_RULE_CREATE = ("ip_src", "ip_dst", "tp_proto", "port_src",
-                     "port_dst", "policy", "action", "time_enforce")
-_JSON_RULE_REMOVE = ("rule_id",)
-_JSON_POLICY = ("policy",)
-_JSON_POLICY_ASSIGN = ("switch_id", "policy")
+_RULE_CREATE = ("ip_src", "ip_dst", "tp_proto", "port_src",
+                "port_dst", "policy", "action", "time_enforce")
+_RULE_REMOVE = ("rule_id",)
+_POLICY = ("policy",)
+_POLICY_ASSIGN = ("switch_id", "policy")
 
 
-def check_rule_creation_json(rule):
-    """Check that rule creation JSON is formatted correctly.
+def check_rule_creation_data(rule):
+    """Check that rule creation data is formatted correctly.
 
-    :param rule: Rule JSON to check.
+    :param rule: Rule dict to check.
     :return: True if valid, False otherwise.
     """
-    for key in _JSON_RULE_CREATE:
+    for key in _RULE_CREATE:
         if key not in rule.keys():
             if (key == "time_enforce" and len(rule) == len(
-                    _JSON_RULE_CREATE)-1):
+                    _RULE_CREATE)-1):
                 return True
             return False
-    if len(rule) == len(_JSON_RULE_CREATE):
+    if len(rule) == len(_RULE_CREATE):
         if len(rule["time_enforce"]) != 2:
             return False
         return True
     return False
 
 
-def check_rule_removal_json(rule):
-    """Check that rule removal JSON is formatted correctly.
+def check_rule_removal_data(rule):
+    """Check that rule removal data is formatted correctly.
 
-    :param rule: Rule JSON to check.
+    :param rule: Rule dict to check.
     :return: True if valid, False otherwise.
     """
-    if len(rule) != len(_JSON_RULE_REMOVE):
+    if len(rule) != len(_RULE_REMOVE):
         return False
-    for key in _JSON_RULE_REMOVE:
+    for key in _RULE_REMOVE:
         if key not in rule.keys():
             return False
     return True
 
 
-def check_policy_json(policy):
-    """Check that policy domain creation JSON is formatted
+def check_policy_data(policy):
+    """Check that policy domain creation data is formatted
     correctly. This can aso be used for policy domain removal.
 
-    :param policy: Policy JSON to check.
+    :param policy: Policy dict to check.
     :return: True if valid, False otherwise.
     """
-    if len(policy) != len(_JSON_POLICY):
+    if len(policy) != len(_POLICY):
         return False
-    for key in _JSON_POLICY:
+    for key in _POLICY:
         if key not in policy.keys():
             return False
     return True
 
 
-def check_policy_assign_json(policy_assign):
-    """Check that policy domain assignment JSON is formatted
+def check_policy_assign_data(policy_assign):
+    """Check that policy domain assignment data is formatted
     correctly. This can also be used for messages that revoke
     assignments.
 
-    :param policy_assign: Policy assignment JSON to check.
+    :param policy_assign: Policy assignment dict to check.
     :return: True if valid, False otherwise.
     """
-    if len(policy_assign) != len(_JSON_POLICY_ASSIGN):
+    if len(policy_assign) != len(_POLICY_ASSIGN):
         return False
-    for key in _JSON_POLICY_ASSIGN:
+    for key in _POLICY_ASSIGN:
         if key not in policy_assign.keys():
             return False
     return True

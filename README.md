@@ -8,11 +8,11 @@ providing a mechanism to group rules into _policy domains_. This
 mechanism allows multiple rules to be deployed to many switches without
 the need to configure each switch separately.
 
-ACLSwitch can be configured by specifying configuration items in JSON
-objects on different lines in the appropriate files under
-Ryu_Application/aclswitch/config. Alternatively, a command line
-interface can be used to configure the firewall dynamically. The command
-line interface assumes that ACLSwitch is running on the same machine.
+ACLSwitch can be configured by specifying configuration items in the
+appropriate YAML files under Ryu_Application/aclswitch/config.
+Alternatively, a command line interface can be used to configure the
+firewall dynamically. The command line interface assumes that ACLSwitch
+is running on the same machine.
 
 Please note that the scripts used to start ACLSwitch and its respective
 command line interface may use paths that do not work on your machine.
