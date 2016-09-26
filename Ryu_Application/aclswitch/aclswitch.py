@@ -66,7 +66,7 @@ class ACLSwitch(ABCRyuApp):
     # An api call to the controller. ACLSwitch should have no idea what
     # what other apps have what table IDS, just what table to forward
     # entries onto.
-    _VERSION = "1.0"
+    _VERSION = "1.1.0"
 
     def __init__(self, contr):
         # Load config

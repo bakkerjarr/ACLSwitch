@@ -97,7 +97,7 @@ class ConfigLoader:
         if pd_yaml["pd_assignments"] is not None:
             for assignment in pd_yaml["pd_assignments"]:
                 if assignment is not None:
-                    if not data_templates.check_policy_assign_json(
+                    if not data_templates.check_policy_assign_data(
                             assignment):
                         self._logging.warning("%s is not formatted "
                                               "correctly.", assignment)
@@ -134,12 +134,13 @@ class ConfigLoader:
         # Copy declared ACL rules into a list, if there are any
         if rule_yaml["acl_rules"] is not None:
             for rule in rule_yaml["acl_rules"]:
-                if not data_templates.check_rule_creation_json(rule):
-                    self._logging.warning("%s is not formatted "
-                                          "correctly.", rule)
-                    continue
-                self._logging.debug("Reading ACL rule: %s", rule)
-                rules.append(rule)
+                if rule is not None:
+                    if not data_templates.check_rule_creation_data(rule):
+                        self._logging.warning("%s is not formatted "
+                                              "correctly.", rule)
+                        continue
+                    self._logging.debug("Reading ACL rule: %s", rule)
+                    rules.append(rule)
         return rules
 
     def _check_conf_keys(self, conf_yaml, conf_keys, conf_file):

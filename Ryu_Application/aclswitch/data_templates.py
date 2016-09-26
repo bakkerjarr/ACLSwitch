@@ -15,18 +15,18 @@
 __author__ = "Jarrod N. Bakker"
 __status__ = "Development"
 
-"""A module for checking that JSON used to passed data is formatted
-correctly.
+"""A module for checking that data used to configure ACLSwitch is
+formatted correctly.
 """
 
 _RULE_CREATE = ("ip_src", "ip_dst", "tp_proto", "port_src",
-                     "port_dst", "policy", "action", "time_enforce")
+                "port_dst", "policy", "action", "time_enforce")
 _RULE_REMOVE = ("rule_id",)
 _POLICY = ("policy",)
 _POLICY_ASSIGN = ("switch_id", "policy")
 
 
-def check_rule_creation_json(rule):
+def check_rule_creation_data(rule):
     """Check that rule creation data is formatted correctly.
 
     :param rule: Rule dict to check.
@@ -45,7 +45,7 @@ def check_rule_creation_json(rule):
     return False
 
 
-def check_rule_removal_json(rule):
+def check_rule_removal_data(rule):
     """Check that rule removal data is formatted correctly.
 
     :param rule: Rule dict to check.
@@ -59,7 +59,7 @@ def check_rule_removal_json(rule):
     return True
 
 
-def check_policy_json(policy):
+def check_policy_data(policy):
     """Check that policy domain creation data is formatted
     correctly. This can aso be used for policy domain removal.
 
@@ -74,7 +74,7 @@ def check_policy_json(policy):
     return True
 
 
-def check_policy_assign_json(policy_assign):
+def check_policy_assign_data(policy_assign):
     """Check that policy domain assignment data is formatted
     correctly. This can also be used for messages that revoke
     assignments.

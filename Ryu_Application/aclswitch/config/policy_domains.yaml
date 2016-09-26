@@ -8,13 +8,21 @@
 #    - Policy Domains
 #    - ACL rules
 #    - Policy Domain switch assignments
-
+#
+# Example below:
+#
+# policy_domains:
+#   - "example1"
+#   - "example2"
+#
+# pd_assignments:
+#   - switch_id: 1
+#     policy: "example1"
+#   - switch_id: 2
+#     policy: "example2"
+#
 policy_domains:
-  - "test1"
-  - "test2"
+  - Null
 
 pd_assignments:
-  - switch_id: 1
-    policy: "test1"
-  - switch_id: 2
-    policy: "test2"
+  - Null
