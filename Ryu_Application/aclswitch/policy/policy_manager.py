@@ -67,7 +67,7 @@ class PolicyManager:
             return False
         # We must revoke the policy from switches that have it assigned
         for switch_id in self._switches:
-            if policy in self._switches[switch_id]:
+            if self._switches[switch_id].has_policy(policy):
                 self.switch_revoke_policy(switch_id, policy)
         del self._policy_to_rules[policy]
         self._logging.info("Removed policy: %s", policy)
@@ -108,7 +108,7 @@ class PolicyManager:
         return self._policy_to_rules[policy]
 
     def policy_get_switches(self, policy):
-        """Return the switch IDs associated with a policy domain.
+        """Return the IDs of switches assigned to a policy domain.
 
         :param policy: Policy domain from which to get switch IDs.
         :return: List of switch IDs.
@@ -116,6 +116,22 @@ class PolicyManager:
         switches = []
         for switch_id in self._switches:
             if self._switches[switch_id].has_policy(policy):
+                switches.append(switch_id)
+        return switches
+
+    def policy_get_connected_switches(self, policy):
+        """Return the IDs os connected switches assigned to a policy
+        domain.
+
+        Note the connected distinction.
+
+        :param policy: Policy domain from which to get switch IDs.
+        :return: List of switch IDs.
+        """
+        switches = []
+        for switch_id in self._switches:
+            switch = self._switches[switch_id]
+            if switch.has_policy(policy) and switch.is_connected():
                 switches.append(switch_id)
         return switches
 

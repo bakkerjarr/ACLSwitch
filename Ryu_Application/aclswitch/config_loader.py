@@ -74,13 +74,16 @@ class ConfigLoader:
                                self._policy_file)
             with open(self._policy_file) as buf_in:
                 pd_yaml = yaml.load(buf_in)
-        except IOError:
-            self._logging.error("Unable to read from file: %s",
-                                self._policy_file)
-            return policies  # We should return an empty list
+        except:
+            self._logging.error("Error reading from file %s: %s",
+                                self._policy_file, sys.exc_info()[0])
+            sys.exit("Error reading from file {0}: {1}".format(
+                self._policy_file, sys.exc_info()[1]))
         # Perform a configuration file key check
         if not self._check_conf_keys(pd_yaml, self._PD_CONF_KEYS,
                                      self._policy_file):
+            self._logging.critical("Please correct configuration file: "
+                                   "%s", self._policy_file)
             sys.exit("Please correct configuration file: {0}".format(
                 self._policy_file))
         # Copy declared policy domains into a list, if there are any
@@ -116,13 +119,16 @@ class ConfigLoader:
                                self._rule_file)
             with open(self._rule_file) as buf_in:
                 rule_yaml = yaml.load(buf_in)
-        except IOError:
-            self._logging.error("Unable to read from file: %s",
-                                self._rule_file)
-            return rules  # We should return an empty list
+        except:
+            self._logging.error("Error reading from file %s: %s",
+                                self._rule_file, sys.exc_info()[1])
+            sys.exit("Error reading from file {0}: {1}".format(
+                self._rule_file, sys.exc_info()[0]))
         # Perform a configuration file key check
         if not self._check_conf_keys(rule_yaml, self._ACL_RULE_CONF_KEYS,
                                      self._rule_file):
+            self._logging.critical("Please correct configuration file: "
+                                   "%s", self._rule_file)
             sys.exit("Please correct configuration file: {0}".format(
                 self._rule_file))
         # Copy declared ACL rules into a list, if there are any

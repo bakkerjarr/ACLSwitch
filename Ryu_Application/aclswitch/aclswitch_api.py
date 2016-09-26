@@ -62,7 +62,7 @@ class ACLSwitchAPI:
         self._pol_man.policy_add_rule(rule["policy"], rule_id)
         new_rule = self.acl_get_rule(rule_id)
         if new_rule.time_enforce == "N/A":
-            switches = self.policy_get_switches(rule["policy"])
+            switches = self.policy_get_connected_switches(rule["policy"])
             self._flow_man.flow_deploy_single_rule(new_rule, switches)
         else:
             self._flow_sch.sched_add_rule(rule_id, new_rule.time_enforce)
@@ -80,7 +80,7 @@ class ACLSwitchAPI:
         self._pol_man.policy_remove_rule(rule.policy, rule_id)
         switches = self.policy_get_switches(rule.policy)
         if rule.time_enforce == "N/A":
-            switches = self.policy_get_switches(rule.policy)
+            switches = self.policy_get_connected_switches(rule.policy)
             self._flow_man.flow_remove_single_rule(rule, switches)
         else:
             self._flow_sch.sched_remove_rule(rule_id)
@@ -181,12 +181,23 @@ class ACLSwitchAPI:
         return ReturnStatus.POLICY_REVOKED
 
     def policy_get_switches(self, policy):
-        """Return the switch IDs assigned to a policy domain.
+        """Return the IDs of switches assigned to a policy domain.
 
         :param policy: Policy domain name.
         :return: A list of switch IDs.
         """
         return self._pol_man.policy_get_switches(policy)
+
+    def policy_get_connected_switches(self, policy):
+        """Return the IDs os connected switches assigned to a policy
+        domain.
+
+        Note the connected distinction.
+
+        :param policy: Policy domain name.
+        :return: A list of switch IDs.
+        """
+        return self._pol_man.policy_get_connected_switches(policy)
 
     def switch_register(self, switch_id):
         """Register a switch with the policy manager.

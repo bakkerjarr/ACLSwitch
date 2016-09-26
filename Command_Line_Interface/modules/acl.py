@@ -28,7 +28,7 @@ class ACL(cmd.Cmd):
 
     # Time is expressed in seconds
     _MIN_TIME = 1
-    _MAX_TIME = 65535
+    _MAX_TIME = 65536
 
     def __init__(self, parent, url_asw):
         """Initialise the ACL interface.
@@ -65,7 +65,7 @@ class ACL(cmd.Cmd):
                 return
             try:
                 i = int(args[8])
-                if not self._MIN_TIME < i < self._MAX_TIME:
+                if not self._MIN_TIME <= i <= self._MAX_TIME:
                     raise ValueError
             except ValueError:
                 print("Enforcement duration should be a whole number "
