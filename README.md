@@ -69,3 +69,7 @@ $ pip3 install requests
 ```bash
 $ pip install Scapy
 ```
+- YAML
+```bash
+$ apt-get install python-yaml
+```
