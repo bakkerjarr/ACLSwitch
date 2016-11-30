@@ -1,0 +1,684 @@
+[33mcommit bcb2c033514a36195e93e794a6a2b4e3d1c74bfc[m
+Author: Michael Baird <michaelb_111@hotmail.com>
+Date:   Wed Nov 30 01:16:04 2016 +0000
+
+    Changed controller.add_flow signiture to allow packet outing, cookies, and idle timeouts.
+    Changed l2switch to only act on packets from its own table.
+    Made Controller inherit from dpset instead of just ryu_app.
+
+[33mcommit 04097061beeadf72aa648bad7b9934be0a3bec19[m
+Merge: e69b79c d9a891d
+Author: Jarrod Bakker <bakkerjarr@users.noreply.github.com>
+Date:   Mon Sep 26 22:52:31 2016 +1300
+
+    Merge pull request #10 from bakkerjarr/develop
+    
+    ACLSwitch YAML Configuration File Changeover
+
+[33mcommit d9a891da153f4ae95bd8801d93ddd7b9d24586ce[m
+Author: Jarrod N. Bakker <jarrodbakker@hotmail.com>
+Date:   Mon Sep 26 22:41:56 2016 +1300
+
+    Versioning and sanity check.
+
+[33mcommit 1801d9c1b74b5c2ddfbf6a45c648bb6cd1767ea4[m
+Merge: 656a346 d93e9c0
+Author: Jarrod Bakker <bakkerjarr@users.noreply.github.com>
+Date:   Mon Sep 26 22:14:02 2016 +1300
+
+    Merge pull request #9 from bakkerjarr/pd_assign_asw_start
+    
+    Policy Domain switch assignment from YAML configuration file.
+
+[33mcommit d93e9c0e7eb9055a83846cb831acbacb55761818[m
+Author: Jarrod N. Bakker <jarrodbakker@hotmail.com>
+Date:   Mon Sep 26 22:11:23 2016 +1300
+
+    Finalised the YAML file Policy Domain assignment changes.
+    
+    Testing for bugs and other quirks.
+
+[33mcommit 656a3464dbd0a4cb29ca573c6684b51ca2a82daa[m
+Merge: 94cad36 5dd8eb1
+Author: Jarrod Bakker <bakkerjarr@users.noreply.github.com>
+Date:   Sun Sep 25 23:49:27 2016 +1300
+
+    Merge pull request #8 from bakkerjarr/pd_assign_asw_start
+    
+    Policy Domain Assignment in File.
+
+[33mcommit 5dd8eb13dc7cd14a50ea500050f1f3c8106c742e[m
+Author: Jarrod N. Bakker <jarrodbakker@hotmail.com>
+Date:   Sun Sep 25 23:40:41 2016 +1300
+
+    Implmented policy_revoke()
+
+[33mcommit 0735b6dbb54937d2997fbe1acb2329cac1a12f65[m
+Author: Jarrod N. Bakker <jarrodbakker@hotmail.com>
+Date:   Sun Sep 25 23:29:52 2016 +1300
+
+    Policy Domains can be assigned in a file.
+    
+    This required there to a distiction in switch states. A switch may
+    not exist, registered, or registered and connected. As a result, a
+    switch class was created. The policy domain mechanism had to be
+    altered to cope with this new approach.
+
+[33mcommit 94cad363512e1de77f0ce841f1c791363d077433[m
+Merge: e69b79c 617a509
+Author: Jarrod Bakker <bakkerjarr@users.noreply.github.com>
+Date:   Sun Sep 25 17:33:19 2016 +1300
+
+    Merge pull request #7 from bakkerjarr/config_revamp
+    
+    Config revamp
+
+[33mcommit 617a5095982763e610bfdcc037afc3a311fdc6fd[m
+Author: Jarrod N. Bakker <jarrodbakker@hotmail.com>
+Date:   Sun Sep 25 17:28:21 2016 +1300
+
+    Reword in comments to reflect intentions.
+
+[33mcommit 602312a92f993777bd83740fe41f5874c2b4e5a0[m
+Author: Jarrod N. Bakker <jarrodbakker@hotmail.com>
+Date:   Sun Sep 25 17:00:16 2016 +1300
+
+    ACL rule definition now in YAML file.
+    
+    All ACL rules can be defined in a singluar YAML file. This includes
+    ACL rules that may or may not be time-enforced.
+
+[33mcommit c9e2f0127e315b21ad18b8a49a9ae91c1e88c1c1[m
+Author: Jarrod N. Bakker <jarrodbakker@hotmail.com>
+Date:   Sat Sep 24 23:42:02 2016 +1200
+
+    Policy domain definition now in YAML file.
+
+[33mcommit e69b79c19d2fb3e6428802a4579849ce9fc794cc[m
+Author: Jarrod N. Bakker <jarrodbakker@hotmail.com>
+Date:   Fri Sep 23 21:07:35 2016 +1200
+
+    Corrected typo.
+
+[33mcommit ffac8ba0daf4a740d23f78e6a41fc4f705ede850[m
+Author: Jarrod N. Bakker <jarrodbakker@hotmail.com>
+Date:   Fri Sep 23 21:06:12 2016 +1200
+
+    Removed script for starting ACLSwitch and provided instructions for starting it in README.md.
+
+[33mcommit fe5efa2a786e55452c62e5d6dbdfc3ab15bacf1c[m
+Author: Jarrod N. Bakker <jarrodbakker@hotmail.com>
+Date:   Sat Jun 11 11:10:07 2016 +1200
+
+    Mininet command for creating a multi-switch network.
+
+[33mcommit 32c42da1c5ba4e2c90f3591db55f6e18b18fe68c[m
+Author: Jarrod N. Bakker <jarrodbakker@hotmail.com>
+Date:   Sat Jun 11 11:09:36 2016 +1200
+
+    Added some link delay for bandwidth testing.
+
+[33mcommit 18ca4875ba6e2407097bf069d5f8c12d95a40b0a[m
+Author: Jarrod N. Bakker <jarrodbakker@hotmail.com>
+Date:   Wed Jun 8 21:20:16 2016 +1200
+
+    Safer reading of files through finally block.
+
+[33mcommit 831fef31763b9aa577e833a43544e836bc926bd9[m
+Merge: 9043894 0673d6f
+Author: Jarrod N. Bakker <jarrodbakker@hotmail.com>
+Date:   Sat Jun 4 17:06:43 2016 +1200
+
+    Merge branch 'issue1'
+    
+    Conflicts:
+    	Command_Line_Interface/interface_rule.py
+    	Command_Line_Interface/interface_show.py
+    	Ryu_Application/acl_switch_rest.py
+    	Ryu_Application/aclswitch.py
+    	Ryu_Application/config.json
+
+[33mcommit 0673d6fecbd901061a3c64677ea275c4c76d4057[m
+Author: Jarrod N. Bakker <jarrodbakker@hotmail.com>
+Date:   Sat Jun 4 16:46:45 2016 +1200
+
+    Updated README.md
+
+[33mcommit 28378749282bace48e6f7db3b2b35d9525608c45[m
+Author: Jarrod N. Bakker <jarrodbakker@hotmail.com>
+Date:   Sat Jun 4 16:29:43 2016 +1200
+
+    Changed ACL table column names.
+
+[33mcommit 7724dd902ff6ffd903b4e80e0aa2b4c43e3d794c[m
+Author: Jarrod N. Bakker <jarrodbakker@hotmail.com>
+Date:   Sat Jun 4 16:22:38 2016 +1200
+
+    Exception handling for REST API and config file reading.
+    
+    The CLI will also display the current version of ACLSwitch when prompted
+    as well.
+
+[33mcommit 6925a8ec91a803d03680dbae12992e4ee2e9aece[m
+Author: Jarrod N. Bakker <jarrodbakker@hotmail.com>
+Date:   Sat Jun 4 16:21:42 2016 +1200
+
+    Remove old reference implementation.
+
+[33mcommit 6b6f54dff7c933a9d4e7437ac384a4def78b6ec9[m
+Author: Jarrod N. Bakker <jarrodbakker@hotmail.com>
+Date:   Sat Jun 4 00:30:17 2016 +1200
+
+    ACLSwitch CLI draft completed and ACLSwitch syntax checking extensions.
+    
+    The CLI has been completely redone. A couple of changes may still be
+    required. Additions to the way that ACLSwitch verifies the syntax of
+    new rules have also been made.
+
+[33mcommit 66f6474b818c2dd38c6797f839033a968f3088fb[m
+Author: Jarrod N. Bakker <jarrodbakker@hotmail.com>
+Date:   Thu Jun 2 22:57:36 2016 +1200
+
+    License information updated.
+
+[33mcommit cb972785adcf11825813bdbb6e024cb94c986832[m
+Author: Jarrod N. Bakker <jarrodbakker@hotmail.com>
+Date:   Thu Jun 2 22:56:30 2016 +1200
+
+    License information updated.
+
+[33mcommit 99c675e813bd8eaef9df1007b89b50db627d2e8a[m
+Author: Jarrod N. Bakker <jarrodbakker@hotmail.com>
+Date:   Thu Jun 2 22:38:52 2016 +1200
+
+    Removed unnecessary comment.
+
+[33mcommit 2e0a95c909e0430e7ec9c18578f6e5c9beabfb54[m
+Author: Jarrod N. Bakker <jarrodbakker@hotmail.com>
+Date:   Thu Jun 2 22:37:44 2016 +1200
+
+    ACLSwitch CLI can fetch information from ACLSwitch.
+
+[33mcommit 401342dd8fbf320962b2e1771936ec8b1fc6d365[m
+Author: Jarrod N. Bakker <jarrodbakker@hotmail.com>
+Date:   Thu Jun 2 18:07:41 2016 +1200
+
+    Indentation fix.
+
+[33mcommit fdb78160ebe0b7f7d0f5cfa2a5b96592e1cddf9d[m
+Author: Jarrod N. Bakker <jarrodbakker@hotmail.com>
+Date:   Thu Jun 2 12:13:48 2016 +1200
+
+    Converted old time scheduling tests to fit new system.
+
+[33mcommit e8d6b93b86874808c9992cf3f0a31314e7aa5f8d[m
+Author: Jarrod N. Bakker <jarrodbakker@hotmail.com>
+Date:   Thu Jun 2 10:40:12 2016 +1200
+
+    Modularised test template for reuse.
+
+[33mcommit e1e9d860d701c111dd33d89dd3a761fc9dda47a1[m
+Author: Jarrod N. Bakker <jarrodbakker@hotmail.com>
+Date:   Wed Jun 1 23:24:46 2016 +1200
+
+    Time test template and bug fixes.
+
+[33mcommit 05333e5ed6238c872d45995d5c0384a8f3fbd7c8[m
+Author: Jarrod N. Bakker <jarrodbakker@hotmail.com>
+Date:   Wed Jun 1 20:52:32 2016 +1200
+
+    Implemented time enforced ACL rules.
+
+[33mcommit 0464ec63983412b411bf012a4ac5f5eae494fe10[m
+Author: Jarrod N. Bakker <jarrodbakker@hotmail.com>
+Date:   Wed May 25 16:33:50 2016 -0700
+
+    Bug fix for whitelist flow table entry removal.
+    
+    Also extended the check for duplicate rules to consider the action of a
+    rule.
+
+[33mcommit cabc2fdbed5d7a741005d595b0e2de1b4a00cadd[m
+Author: Jarrod N. Bakker <jarrodbakker@hotmail.com>
+Date:   Tue May 24 16:39:50 2016 -0700
+
+    Whitelist ACL rule support implemented.
+    
+    This required changes to be made to the way that ACL rules are stored
+    and represented. The flow table pipeline was also changed to support
+    whitelisting and blacklisting of flows.
+
+[33mcommit 90438941ef33f5f6e74c7f807a3476d7a4237024[m
+Merge: c205760 920f53c
+Author: Jarrod N. Bakker <jarrodbakker@hotmail.com>
+Date:   Fri May 13 04:31:36 2016 -0700
+
+    Fixing post merge conflicts.
+
+[33mcommit c20576012a417678d69b07f1bf9ba865d7801295[m
+Merge: 0b36383 2ba595b
+Author: Jarrod N. Bakker <jarrodbakker@hotmail.com>
+Date:   Fri May 13 04:26:13 2016 -0700
+
+    Merge branch 'JimSRush-master'
+
+[33mcommit 2ba595b71e61adf5a64cf7d729cb78b25f3faa4c[m
+Merge: 0b36383 e917269
+Author: Jarrod N. Bakker <jarrodbakker@hotmail.com>
+Date:   Fri May 13 04:25:22 2016 -0700
+
+    Solving merge conflicts.
+
+[33mcommit 920f53c435c08f5eb467cff90b02d642cf46e7bb[m
+Author: Jarrod N. Bakker <jarrodbakker@hotmail.com>
+Date:   Fri May 13 03:55:34 2016 -0700
+
+    Jim and Tim pull request conflict solving.
+
+[33mcommit 229b4876acb7fa00e2449767d600a3753093c287[m
+Author: Jarrod N. Bakker <jarrodbakker@hotmail.com>
+Date:   Fri May 13 01:55:18 2016 -0700
+
+    Outline for FlowScheduler and correcting FlowManager typo.
+
+[33mcommit e917269d862dd7d1f552eccb3059fdac3d9f2a26[m
+Merge: 718f85b efb0e9f
+Author: JimSRush <jim@galesburg.co.nz>
+Date:   Fri May 13 15:07:54 2016 +1200
+
+    Merge pull request #4 from JimSRush/new-work
+    
+    New work
+
+[33mcommit 9b4610e2b7d49bd21e778fec80fefce694581f16[m
+Author: Jarrod N. Bakker <jarrodbakker@hotmail.com>
+Date:   Sat May 7 02:53:55 2016 -0700
+
+    REST endpoints for fetching information on the state of ACLSwitch.
+
+[33mcommit e57719cfa815cfca791a866841ebde916e125a42[m
+Author: Jarrod N. Bakker <jarrodbakker@hotmail.com>
+Date:   Mon May 2 20:12:52 2016 -0700
+
+    REST endpoints to modify the ACL and Policy Domains complete."
+    
+    Minor bug fixes were corrected as well.
+    - _TABLE_ID_ACL had been accidentally removed from aclswitch.py
+    - Policy domains were not revoked from switches upon their removal.
+
+[33mcommit 98264fcdb250420004fa71683815bd760d83aa59[m
+Author: Jarrod N. Bakker <jarrodbakker@hotmail.com>
+Date:   Sat Apr 30 21:51:03 2016 -0700
+
+    Comments added to endpoints.
+
+[33mcommit 5447c1f9a11fd43e752882a7ab9b28e56860f9cd[m
+Author: Jarrod N. Bakker <jarrodbakker@hotmail.com>
+Date:   Sat Apr 30 21:28:21 2016 -0700
+
+    Addressing TODO items.
+
+[33mcommit 483d67ea4a3acca99acf1c1501692e72cc16700e[m
+Author: Jarrod N. Bakker <jarrodbakker@hotmail.com>
+Date:   Sat Apr 30 21:24:31 2016 -0700
+
+    New logging mechanism integrated with the existing code.
+
+[33mcommit 45a58501f7aa3c5de80ba6ba7c8dcc10d43dd9e6[m
+Author: Jarrod N. Bakker <jarrodbakker@hotmail.com>
+Date:   Sat Apr 30 03:23:45 2016 -0700
+
+    Logging mechanism changed. Configuration loading factorised.
+
+[33mcommit 0f39783027623212a5678340b5b881213af7a33e[m
+Author: Jarrod N. Bakker <jarrodbakker@hotmail.com>
+Date:   Fri Apr 29 17:46:08 2016 -0700
+
+    Policies can be created and removed. Switches can be assigned to and revoked from policies as well.
+
+[33mcommit 88680e3cd852a4504f624d79234d2b9ce24b1cf4[m
+Author: Jarrod N. Bakker <jarrodbakker@hotmail.com>
+Date:   Thu Apr 28 05:24:08 2016 -0700
+
+    Rules can be created and removed through a REST API.
+
+[33mcommit ebc3cc5eb0628ab9ad5fd4af13d3e7f72cda7415[m
+Author: Jarrod N. Bakker <jarrodbakker@hotmail.com>
+Date:   Thu Apr 28 05:22:15 2016 -0700
+
+    Updating CLI.
+
+[33mcommit 30dfd040963161299b3903d35177d90916bb1250[m
+Author: Jarrod N. Bakker <jarrodbakker@hotmail.com>
+Date:   Sat Apr 23 18:56:49 2016 -0700
+
+    Read from config file to create policy domains and rules.
+
+[33mcommit 74dd4d1e6284cad3621a10100a9d002de36ec970[m
+Author: Jarrod N. Bakker <jarrodbakker@hotmail.com>
+Date:   Sat Mar 19 18:44:28 2016 -0700
+
+    Made _send_msg method private.
+
+[33mcommit 5a704a4533ae8598b4f18f334e8cbaac9709b208[m
+Author: Jarrod N. Bakker <jarrodbakker@hotmail.com>
+Date:   Sat Mar 19 18:35:19 2016 -0700
+
+    Updated ACLSwitch to support new controller abstraction.
+    
+    ACLSwitch now follows the abstract base class for ryu apps and is
+    initialised by the controller.
+
+[33mcommit 31b648d81e79a148325b34d41b6a923aaf111342[m
+Author: Jarrod N. Bakker <jarrodbakker@hotmail.com>
+Date:   Fri Mar 18 23:48:55 2016 -0700
+
+    Abstracted the controller from ACLSwitch.
+    
+    Applications must be registered through the controller abstraction. This
+    abstraction informs the app of supported event handlers and passes data
+    off as required. The layer 2 switching logic has also been removed from
+    ACLSwitch into a small application.
+
+[33mcommit 0b1a21ca71679931dc5c77a3a18ba258d63a87a9[m
+Author: Jarrod N. Bakker <jarrodbakker@hotmail.com>
+Date:   Sat Feb 27 22:44:32 2016 -0800
+
+    Rule syntax check added.
+
+[33mcommit 35cba954804041ae6595493902f34e78e6d3043c[m
+Author: Jarrod N. Bakker <jarrodbakker@hotmail.com>
+Date:   Sat Feb 27 00:44:52 2016 -0800
+
+    Functionality for reading from JSON config file.
+
+[33mcommit efb0e9fea607270c6e4d30e684027b4ccbb40126[m
+Author: Jim Rush <seethara@stanford.edu>
+Date:   Mon Feb 22 23:30:15 2016 -0800
+
+    further error handling and fixing the CLI for time based rules
+
+[33mcommit c2eaa14f144e137e90e78530c429ea0d6c7a5a8c[m
+Author: Jim Rush <seethara@stanford.edu>
+Date:   Mon Feb 22 22:51:59 2016 -0800
+
+    Modified table to show the table the rule applies to
+
+[33mcommit 76c72d929b17095e96729a1ffea8020111dfd1fc[m
+Author: Jim Rush <seethara@stanford.edu>
+Date:   Mon Feb 22 22:40:53 2016 -0800
+
+    further error handling in the CLI for invalid list specification
+
+[33mcommit efcf2592240ef5757119e2bffc55f3f92e08d6c5[m
+Author: Jim Rush <seethara@stanford.edu>
+Date:   Mon Feb 22 22:37:34 2016 -0800
+
+    Improved error handling in the CLI interface
+
+[33mcommit 414cee25b595dc8c6e7d232c28fce1d774fa105e[m
+Author: Jim Rush <seethara@stanford.edu>
+Date:   Mon Feb 22 22:02:28 2016 -0800
+
+    Further tweaks to the create_reversed_rule method so the CLI doesn't lose its boots
+
+[33mcommit 33530fdf4dd3af3e350a711a681890036e2bab90[m
+Author: Jim Rush <seethara@stanford.edu>
+Date:   Mon Feb 22 21:52:29 2016 -0800
+
+    Whitelist entries are now automatically having a reverse match created. Yay!
+
+[33mcommit 9e91e11f1aee13c723d7f6406da9e4128b3f48d3[m
+Author: Jim Rush <seethara@stanford.edu>
+Date:   Mon Feb 22 21:40:09 2016 -0800
+
+    Added a new method to reverse a match for whitelist table entries
+
+[33mcommit 828e7d10c9014fafad63f995e499d1153bef8a80[m
+Author: Jim Rush <seethara@stanford.edu>
+Date:   Mon Feb 22 11:47:53 2016 -0800
+
+    Added a reversed whitelist rule
+
+[33mcommit 96c92e8f6d29792488a632a46b5b75c127aac092[m
+Author: Jim Rush <seethara@stanford.edu>
+Date:   Mon Feb 22 00:36:41 2016 -0800
+
+    Added match rules for both ARP_REQUEST and ARP_REPLY
+
+[33mcommit f9b423a38ff79e779e7bd4988e221cb4dbd7a923[m
+Author: Jim Rush <seethara@stanford.edu>
+Date:   Mon Feb 22 00:18:45 2016 -0800
+
+    Imported ARP from packet library
+
+[33mcommit 600e5b81ad9cac98773ff35bd49e470df10d3b2d[m
+Author: Jim Rush <seethara@stanford.edu>
+Date:   Sun Feb 21 23:34:47 2016 -0800
+
+    Added a flow rule to allow arp packets through the whitelist
+
+[33mcommit d7ebc8e870e999fb15d3cbb7654365d0d0bb3fb5[m
+Merge: 718f85b 29fa617
+Author: Jim Rush <seethara@stanford.edu>
+Date:   Sun Feb 21 22:55:57 2016 -0800
+
+    Merge branch 'new-work' of https://github.com/jimsrush/ACLSwitch into new-work
+    
+    ok:quit
+
+[33mcommit 29fa617dd084f105e14a4881a8a09ff39684f541[m
+Author: Jim Rush <seethara@stanford.edu>
+Date:   Sat Feb 20 16:51:43 2016 -0800
+
+    further refinement of parsing logic
+
+[33mcommit d8810593ad22d8e596be48e7f626a037bd615b43[m
+Author: Jim Rush <seethara@stanford.edu>
+Date:   Sat Feb 20 16:10:41 2016 -0800
+
+    Corrected parsing logic in ACLSwitch
+
+[33mcommit 8bd4a3c6d0b7c0eb4788f507119e3bce2a814d5d[m
+Author: Jim Rush <seethara@stanford.edu>
+Date:   Sat Feb 20 16:03:56 2016 -0800
+
+    Updated config to parsable json, changed parsing logic in controller
+
+[33mcommit 333f362793275d774bb90e04f8b4a0130561be4d[m
+Author: Tim <timinvisiblesweet@gmail.com>
+Date:   Sat Feb 20 14:05:40 2016 -0800
+
+    fixed config
+
+[33mcommit 5bb06737d7880e78b98d6d8787b9cdca77df8d39[m
+Author: Srini Seetharaman <seethara@stanford.edu>
+Date:   Fri Feb 19 23:20:09 2016 -0800
+
+    added and connected flow tables, modified API and CLI
+
+[33mcommit 718f85b1201217c54c6f6726b89c3087f431a921[m
+Merge: dc91796 57bbc52
+Author: JimSRush <jim@galesburg.co.nz>
+Date:   Wed Feb 17 19:29:25 2016 +1300
+
+    Merge pull request #3 from JimSRush/revert-2-Tim
+    
+    Revert "Tim"
+
+[33mcommit 57bbc52dbb6bafe290fc855e8fed3c08709a716c[m
+Author: JimSRush <jim@galesburg.co.nz>
+Date:   Wed Feb 17 19:28:24 2016 +1300
+
+    Revert "Tim"
+
+[33mcommit dc91796797fa5f82a677403445b6b89694d395ff[m
+Merge: c9b6c09 f8d0b95
+Author: JimSRush <jim@galesburg.co.nz>
+Date:   Wed Feb 17 19:14:19 2016 +1300
+
+    Merge pull request #2 from JimSRush/Tim
+    
+    Tim
+
+[33mcommit f8d0b95538f223dca7d21999977d53a979601167[m
+Author: Tim <timinvisiblesweet@gmail.com>
+Date:   Tue Feb 16 21:41:05 2016 -0800
+
+    Flow pipeline corrected (Blacklist -> Whitelist -> Controller)
+
+[33mcommit 68644422881052dad7596466af8f6c293f7ba17a[m
+Author: Jarrod N. Bakker <jarrodbakker@hotmail.com>
+Date:   Mon Feb 15 20:11:41 2016 -0800
+
+    Renamed files to match PEP 0008 file naming conventions.
+
+[33mcommit 5c4314bedba52e48a6e68a175d5b056a0af8a17a[m
+Author: Jarrod N. Bakker <jarrodbakker@hotmail.com>
+Date:   Mon Feb 15 14:59:09 2016 -0800
+
+    Corrected commits to master branch.
+
+[33mcommit 0b363831d202cb74b5951cab5af5934ba83d8914[m
+Author: Jarrod N. Bakker <jarrodbakker@hotmail.com>
+Date:   Mon Feb 15 14:53:04 2016 -0800
+
+    Revert "Begun outline of new CLI."
+    
+    This reverts commit 5abfde379938a34e28a374952df0f009806469f7.
+
+[33mcommit e33b5e4d16c288af3e183f3b654d7e9e28c3a448[m
+Author: Jarrod N. Bakker <jarrodbakker@hotmail.com>
+Date:   Mon Feb 15 14:53:00 2016 -0800
+
+    Revert "Moved old files to temporary location for reference."
+    
+    This reverts commit d58859d4de49ef118b24170c80d340d91ba0ab8b.
+
+[33mcommit dd0ceaaadbdb401e2423fbc3b7c395a117a2ef79[m
+Author: Jarrod N. Bakker <jarrodbakker@hotmail.com>
+Date:   Mon Feb 15 14:52:36 2016 -0800
+
+    Revert "Added to allow local imports."
+    
+    This reverts commit b1f8344f1525b97a73619fbd84ec26c72829eb7d.
+
+[33mcommit b1f8344f1525b97a73619fbd84ec26c72829eb7d[m
+Author: Jarrod N. Bakker <jarrodbakker@hotmail.com>
+Date:   Mon Feb 15 02:02:10 2016 -0800
+
+    Added to allow local imports.
+
+[33mcommit d58859d4de49ef118b24170c80d340d91ba0ab8b[m
+Author: Jarrod N. Bakker <jarrodbakker@hotmail.com>
+Date:   Mon Feb 15 02:01:25 2016 -0800
+
+    Moved old files to temporary location for reference.
+
+[33mcommit 5abfde379938a34e28a374952df0f009806469f7[m
+Author: Jarrod N. Bakker <jarrodbakker@hotmail.com>
+Date:   Mon Feb 15 01:58:18 2016 -0800
+
+    Begun outline of new CLI.
+
+[33mcommit be18dd15815db5e4836f4ac713d00318572f35eb[m
+Author: Tim <timinvisiblesweet@gmail.com>
+Date:   Mon Feb 15 01:06:43 2016 -0800
+
+    Changing CLI to acceptblacklist and whitelist config
+
+[33mcommit 1aed05800a88e2ba623d08495814b7669ce27433[m
+Author: Tim <timinvisiblesweet@gmail.com>
+Date:   Sat Feb 13 21:24:46 2016 -0800
+
+    Debugging REST API
+
+[33mcommit 14f6c671337efcbd80afba7ab81f0c8733c728f4[m
+Author: Tim <timinvisiblesweet@gmail.com>
+Date:   Sat Feb 13 21:22:11 2016 -0800
+
+    Debugging REST API
+
+[33mcommit f406ce2f8d5c86f8b451c7afc864a7da2003fd8e[m
+Author: Tim <timinvisiblesweet@gmail.com>
+Date:   Sat Feb 13 21:08:26 2016 -0800
+
+    Corrected config.json
+
+[33mcommit d5d99564072ab53676b1d74d97564b9e63b59ba3[m
+Author: Tim <timinvisiblesweet@gmail.com>
+Date:   Sat Feb 13 20:55:51 2016 -0800
+
+    Added logic to handle call adding whitelist and blacklist rules to aclswitch.py
+
+[33mcommit 047ca39a866fb2d6b511140b7a9ce6e3ed8ef796[m
+Author: Tim <timinvisiblesweet@gmail.com>
+Date:   Sat Feb 13 20:39:13 2016 -0800
+
+    Added API call and rule check for whitelist and blacklist REST API
+
+[33mcommit 6aa652ebaef0235dbc05699df828aa4a33ff2376[m
+Author: Tim <timinvisiblesweet@gmail.com>
+Date:   Sat Feb 13 20:02:09 2016 -0800
+
+    Added option for whitelist and blacklist to config file
+
+[33mcommit 6d8124f9c62d178c9619ae9ff19e10ed29812c61[m
+Author: Jim Rush <seethara@stanford.edu>
+Date:   Sat Feb 13 15:43:41 2016 -0800
+
+    Modified whitelist tag is now reaching the controller through the API
+
+[33mcommit fb5cad949930ffd6c9aeb7ac21abfc55f02a0b39[m
+Author: Tim <timinvisiblesweet@gmail.com>
+Date:   Fri Feb 12 14:27:40 2016 -0800
+
+    initial commit
+
+[33mcommit 23b1b14aed2540a286ef9903762289c3634b5ec1[m
+Author: Jarrod N. Bakker <jarrodbakker@hotmail.com>
+Date:   Sun Jan 24 15:28:05 2016 -0800
+
+    Ported functionality to initialise flow-table pipeline and support naive Ethernet forwarding.
+
+[33mcommit a594b4a31bab6881c9cf4deb8af6db278540f62e[m
+Author: Jarrod N. Bakker <jarrodbakker@hotmail.com>
+Date:   Thu Jan 21 15:06:31 2016 -0800
+
+    Begun refactoring of ACLSwitch.
+
+[33mcommit 445b4d7561fe9ca8376615a087938d754b95d2da[m
+Author: Jarrod N. Bakker <jarrodbakker@hotmail.com>
+Date:   Thu Jan 21 13:30:05 2016 -0800
+
+    Corrected file import exception handling.
+
+[33mcommit 1c77387ccdf6958a84c325ac9f1aa6b78a6220c2[m
+Author: Jarrod N. Bakker <jarrodbakker@hotmail.com>
+Date:   Wed Jan 20 14:20:44 2016 -0800
+
+    Tests for verifying the correct operation of time enforcement rules.
+
+[33mcommit da64fd1dd3bf40c558b0395ec8ce203ee6acee9a[m
+Author: Jarrod N. Bakker <jarrodbakker@hotmail.com>
+Date:   Wed Jan 20 14:19:23 2016 -0800
+
+    Refactored rule scheduling logic.
+
+[33mcommit c9b6c0997e40325b813f1d0013a9aa237fe2868b[m
+Author: Jarrod N. Bakker <jarrodbakker@hotmail.com>
+Date:   Tue Jan 19 14:17:24 2016 -0800
+
+    Modifying indentation.
+
+[33mcommit 9ca0a021c7cc9b003324c285dd22c377aa6c45b7[m
+Author: Jarrod N. Bakker <jarrodbakker@hotmail.com>
+Date:   Tue Jan 19 12:50:42 2016 -0800
+
+    ACLSwitch created and initialised for development.
+
+[33mcommit b1a25e706d2db799ed3320b2f18ebc94595f9dfe[m
+Author: Jarrod Bakker <bakkerjarr@users.noreply.github.com>
+Date:   Wed Jan 20 09:44:03 2016 +1300
+
+    Initial commit
