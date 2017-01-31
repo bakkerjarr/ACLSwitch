@@ -205,9 +205,23 @@ class Controller(dpset.DPSet):
         :param event: The OpenFlow event.
         """
         datapath_id = event.msg.datapath_id
-
+        datapath = event.msg.datapath
+        ofproto = event.msg.datapath.ofproto
+        parser = event.msg.datapath.ofproto_parser
         self.logger.info("Switch \'{0}\' connected.".format(datapath_id))
 
+
+        mod = parser.OFPFlowMod(datapath=datapath, table_id=ofproto.OFPTT_ALL,
+                                command=ofproto.OFPFC_DELETE, priority=0,
+                                match=parser.OFPMatch(), out_port=ofproto.OFPP_ANY, 
+                                out_group=ofproto.OFPG_ANY,
+                                cookie=0, cookie_mask=0,
+                                buffer_id=0xffffffff)
+
+        datapath.send_msg(mod)
+
+        self.logger.info("Switch \'{0}\' all tables cleared.".format(datapath_id)
+)
         for app in self._handlers[self._EVENT_OFP_SW_FEATURES]:
             self._apps[app].switch_features(event)
 
