@@ -32,10 +32,10 @@ from ryu.ofproto import ofproto_v1_3_parser as ofp13_parser
 
 # ACLSwitch modules
 from abc_ryu_app import ABCRyuApp
-from aclswitch_api import ACLSwitchAPI
-from config_loader import ConfigLoader
-from flow.flow_manager import FlowManager
-from rest_wsgi import ACLSwitchREST
+from aclswitch.aclswitch_api import ACLSwitchAPI
+from aclswitch.config_loader import ConfigLoader
+from aclswitch.flow.flow_manager import FlowManager
+from aclswitch.rest_wsgi import ACLSwitchREST
 
 # Other modules
 from netaddr import IPAddress

@@ -13,8 +13,7 @@
 # limitations under the License.
 
 # Module imports
-import json
-import data_templates
+import aclswitch.data_templates as data_templates
 import logging
 import sys
 import yaml

@@ -13,7 +13,7 @@
 # limitations under the License.
 
 # ACLSwitch modules
-from switch import Switch
+from aclswitch.policy.switch import Switch
 
 # Module imports
 import logging

@@ -15,7 +15,7 @@
 
 from datetime import datetime
 from prettytable import PrettyTable
-import cli_util
+from modules import cli_util
 import cmd
 import json
 import requests

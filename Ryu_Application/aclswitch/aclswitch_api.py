@@ -13,9 +13,9 @@
 # limitations under the License.
 
 # ACLSwitch modules
-from acl.acl_manager import ACLManager
-from flow.flow_scheduler import FlowScheduler
-from policy.policy_manager import PolicyManager
+from aclswitch.acl.acl_manager import ACLManager
+from aclswitch.flow.flow_scheduler import FlowScheduler
+from aclswitch.policy.policy_manager import PolicyManager
 
 # Module imports
 import logging

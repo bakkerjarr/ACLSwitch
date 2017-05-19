@@ -13,8 +13,8 @@
 # limitations under the License.
 
 # ACLSwitch modules
-from aclswitch_api import ReturnStatus
-import data_templates
+from aclswitch.aclswitch_api import ReturnStatus
+import aclswitch.data_templates as data_templates
 
 # Module imports
 from ryu.app.wsgi import ControllerBase
@@ -66,7 +66,7 @@ class ACLSwitchREST(ControllerBase):
         aclswitch_info.update(self._api.get_aclswitch_info())
         body = json.dumps(aclswitch_info)
         return Response(content_type="application/json", status=200,
-                        body=body)
+                        body=body, charset="UTF-8")
 
     @route("aclswitch", _URL_HEARTBEAT, methods=["GET"])
     def heartbeat(self, req, **kwargs):
@@ -78,7 +78,7 @@ class ACLSwitchREST(ControllerBase):
         heartbeat = self._MSG_HB.copy()
         heartbeat["heartbeat"] = time.ctime()
         return Response(content_type="application/json",
-                        body=json.dumps(heartbeat))
+                        body=json.dumps(heartbeat), charset="UTF-8")
 
     ######
     ### ACL endpoints
@@ -94,7 +94,7 @@ class ACLSwitchREST(ControllerBase):
         body = self._MSG_INFO.copy()
         body["info"] = self._api.get_all_rules()
         return Response(content_type="application/json", status=200,
-                        body=json.dumps(body))
+                        body=json.dumps(body), charset="UTF-8")
 
     @route("aclswitch", _URL_ACL_TIME, methods=["GET"])
     def get_acls_time(self, req, **kwargs):
@@ -106,7 +106,7 @@ class ACLSwitchREST(ControllerBase):
         body = self._MSG_INFO.copy()
         body["info"] = self._api.get_time_queue()
         return Response(content_type="application/json", status=200,
-                        body=json.dumps(body))
+                        body=json.dumps(body), charset="UTF-8")
 
     @route("aclswitch", _URL_ACL, methods=["POST"])
     def post_acl(self, req, **kwargs):
@@ -115,14 +115,15 @@ class ACLSwitchREST(ControllerBase):
         :return: A response containing the result of the operation.
         """
         try:
-            rule_req = json.loads(req.body)
+            rule_req = json.loads(req.body.decode("utf-8"))
             if not data_templates.check_rule_creation_data(rule_req[
                                                                "rule"]):
                 raise KeyError
         except (ValueError, KeyError):
             error = self._MSG_ERROR.copy()
             error["error"] = "Invalid rule creation JSON passed."
-            return Response(status=400, body=json.dumps(error))
+            return Response(status=400, body=json.dumps(error),
+                            charset="UTF-8")
         return_status = self._api.acl_create_rule(rule_req["rule"])
         return self._api_response(return_status)
 
@@ -133,13 +134,14 @@ class ACLSwitchREST(ControllerBase):
         :return: A response containing the result of the operation.
         """
         try:
-            rule_req = json.loads(req.body)
+            rule_req = json.loads(req.body.decode("utf-8"))
             if not data_templates.check_rule_removal_data(rule_req):
                 raise KeyError
         except (ValueError, KeyError):
             error = self._MSG_ERROR.copy()
             error["error"] = "Invalid rule removal JSON passed."
-            return Response(status=400, body=json.dumps(error))
+            return Response(status=400, body=json.dumps(error),
+                            charset="UTF-8")
         return_status = self._api.acl_remove_rule(rule_req["rule_id"])
         return self._api_response(return_status)
 
@@ -157,7 +159,7 @@ class ACLSwitchREST(ControllerBase):
         body = self._MSG_INFO.copy()
         body["info"] = self._api.get_all_policies()
         return Response(content_type="application/json", status=200,
-                        body=json.dumps(body))
+                        body=json.dumps(body), charset="UTF-8")
 
     @route("aclswitch", _URL_POLICY, methods=["POST"])
     def post_policy(self, req, **kwargs):
@@ -166,14 +168,15 @@ class ACLSwitchREST(ControllerBase):
         :return: A response containing the result of the operation.
         """
         try:
-            policy_req = json.loads(req.body)
+            policy_req = json.loads(req.body.decode("utf-8"))
             if not data_templates.check_policy_data(policy_req):
                 raise KeyError
         except (ValueError, KeyError):
             error = self._MSG_ERROR.copy()
             error["error"] = "Invalid policy domain creation JSON " \
                              "passed."
-            return Response(status=400, body=json.dumps(error))
+            return Response(status=400, body=json.dumps(error),
+                            charset="UTF-8")
         return_status = self._api.policy_create(policy_req["policy"])
         return self._api_response(return_status)
 
@@ -184,13 +187,14 @@ class ACLSwitchREST(ControllerBase):
         :return: A response containing the result of the operation.
         """
         try:
-            policy_req = json.loads(req.body)
+            policy_req = json.loads(req.body.decode("utf-8"))
             if not data_templates.check_policy_data(policy_req):
                 raise KeyError
         except (ValueError, KeyError):
             error = self._MSG_ERROR.copy()
             error["error"] = "Invalid policy domain removal JSON passed."
-            return Response(status=400, body=json.dumps(error))
+            return Response(status=400, body=json.dumps(error),
+                            charset="UTF-8")
         return_status = self._api.policy_remove(policy_req["policy"])
         return self._api_response(return_status)
 
@@ -201,7 +205,7 @@ class ACLSwitchREST(ControllerBase):
         :return: A response containing the result of the operation.
         """
         try:
-            policy_assign_req = json.loads(req.body)
+            policy_assign_req = json.loads(req.body.decode("utf-8"))
             if not data_templates.check_policy_assign_data(
                     policy_assign_req):
                 raise KeyError
@@ -209,7 +213,8 @@ class ACLSwitchREST(ControllerBase):
             error = self._MSG_ERROR.copy()
             error["error"] = "Invalid policy domain assignment JSON " \
                              "passed."
-            return Response(status=400, body=json.dumps(error))
+            return Response(status=400, body=json.dumps(error),
+                            charset="UTF-8")
         return_status = self._api.policy_assign_switch(
             policy_assign_req["switch_id"], policy_assign_req["policy"])
         return self._api_response(return_status)
@@ -221,7 +226,7 @@ class ACLSwitchREST(ControllerBase):
         :return: A response containing the result of the operation.
         """
         try:
-            policy_revoke_req = json.loads(req.body)
+            policy_revoke_req = json.loads(req.body.decode("utf-8"))
             if not data_templates.check_policy_assign_data(
                     policy_revoke_req):
                 raise KeyError
@@ -229,7 +234,8 @@ class ACLSwitchREST(ControllerBase):
             error = self._MSG_ERROR.copy()
             error["error"] = "Invalid policy domain assignment revoke " \
                              "JSON passed."
-            return Response(status=400, body=json.dumps(error))
+            return Response(status=400, body=json.dumps(error),
+                            charset="UTF-8")
         return_status = self._api.policy_revoke_switch(
             policy_revoke_req["switch_id"], policy_revoke_req["policy"])
         return self._api_response(return_status)
@@ -250,7 +256,7 @@ class ACLSwitchREST(ControllerBase):
         body = self._MSG_INFO.copy()
         body["info"] = self._api.get_all_switches()
         return Response(content_type="application/json", status=200,
-                        body=json.dumps(body))
+                        body=json.dumps(body), charset="UTF-8")
 
     ######
     ### Helper functions
@@ -332,4 +338,4 @@ class ACLSwitchREST(ControllerBase):
                                "Please contact an ACLSwitch developer " \
                                "immediately."
         return Response(content_type="application/json", status=status,
-                        body=json.dumps(body))
+                        body=json.dumps(body), charset="UTF-8")

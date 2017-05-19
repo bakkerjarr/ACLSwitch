@@ -13,7 +13,7 @@
 # limitations under the License.
 
 # ACLSwitch modules
-from acl_rule_syntax import ACLRuleSyntax
+from aclswitch.acl.acl_rule_syntax import ACLRuleSyntax
 
 # Other modules
 from collections import namedtuple
