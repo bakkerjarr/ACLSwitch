@@ -17,8 +17,10 @@ from ryu.app.ofctl import api
 from ryu.app.wsgi import WSGIApplication
 from ryu.base import app_manager
 from ryu.controller import ofp_event
-from ryu.controller.handler import CONFIG_DISPATCHER, MAIN_DISPATCHER
+from ryu.controller.handler import CONFIG_DISPATCHER, MAIN_DISPATCHER, HANDSHAKE_DISPATCHER
 from ryu.controller.handler import set_ev_cls
+
+from ryu.controller import dpset
 
 # Application modules
 from l2switch.l2switch import L2Switch
@@ -28,7 +30,7 @@ __author__ = "Jarrod N. Bakker"
 __status__ = "Development"
 
 
-class Controller(app_manager.RyuApp):
+class Controller(dpset.DPSet):
     """Abstracts the details of the Ryu controller.
 
     This class is used to provide applications with endpoints for
@@ -50,8 +52,10 @@ class Controller(app_manager.RyuApp):
                           self._EVENT_OFP_PACKET_IN: []}
         self._wsgi = kwargs['wsgi']
         # Insert Ryu applications below
+        
         self._register_app(L2Switch(self))
         self._register_app(ACLSwitch(self))
+        
 
     def get_ofpe_handlers(self):
         """Return the tuple of the OpenFlow protocol event handlers.
@@ -93,7 +97,7 @@ class Controller(app_manager.RyuApp):
     # Methods that send data to OpenFlow switches
 
     def add_flow(self, datapath, priority, match, inst, hard_timeout,
-                  table_id, buffer_id=None):
+                  table_id, buffer_id=None, in_port=None, msg=None, idle_timeout=0, packet_out=True, cookie=0):
         """Reactively add a flow table entry to a switch's flow table.
 
         :param datapath: The switch to add the flow-table entry to.
@@ -112,20 +116,41 @@ class Controller(app_manager.RyuApp):
         if buffer_id:
             mod = parser.OFPFlowMod(datapath=datapath,
                                     buffer_id=buffer_id,
-                                    hard_timeout=hard_timeout,
+                                    hard_timeout=0,
+                                    idle_timeout=idle_timeout,
                                     priority=priority, match=match,
                                     flags=ofproto.OFPFF_SEND_FLOW_REM,
-                                    instructions=inst, table_id=table_id)
+                                    instructions=inst, table_id=table_id, cookie=cookie)
         else:
             mod = parser.OFPFlowMod(datapath=datapath,
-                                    hard_timeout=hard_timeout,
+                                    hard_timeout=0,
+                                    idle_timeout=idle_timeout,
                                     priority=priority, match=match,
                                     flags=ofproto.OFPFF_SEND_FLOW_REM,
-                                    instructions=inst, table_id=table_id)
+                                    instructions=inst, table_id=table_id, cookie=cookie)
         self._send_msg(datapath, mod)
+        if packet_out:
+            if msg:
+                out = None
+                if buffer_id and buffer_id != 0xffffffff:
+                    out = parser.OFPPacketOut(
+                        datapath=datapath,
+                        actions=[parser.OFPActionOutput(ofproto.OFPP_TABLE)],
+                        in_port=in_port,
+                        buffer_id=buffer_id,
+                        data=msg.data)
+                    datapath.send_msg(out)
+                else:
+                    out = parser.OFPPacketOut(
+                        datapath=datapath,
+                        actions=[parser.OFPActionOutput(ofproto.OFPP_TABLE)],
+                        in_port=in_port,
+                        buffer_id=0xffffffff,
+                        data=msg.data)
+                    datapath.send_msg(out)
 
     def remove_flow(self, datapath, parser, table, remove_type, priority,
-                    match, out_port, out_group):
+                    match, out_port, out_group, cookie=0, cookie_mask=0):
         """Remove a flow table entry from a switch.
 
         The callee should decide of the removal type.
@@ -142,7 +167,8 @@ class Controller(app_manager.RyuApp):
         mod = parser.OFPFlowMod(datapath=datapath, table_id=table,
                                 command=remove_type, priority=priority,
                                 match=match, out_port=out_port,
-                                out_group=out_group)
+                                out_group=out_group,
+                                cookie=cookie, cookie_mask=cookie_mask)
         datapath.send_msg(mod)
 
     def packet_out(self, datapath, out):
@@ -179,9 +205,23 @@ class Controller(app_manager.RyuApp):
         :param event: The OpenFlow event.
         """
         datapath_id = event.msg.datapath_id
-
+        datapath = event.msg.datapath
+        ofproto = event.msg.datapath.ofproto
+        parser = event.msg.datapath.ofproto_parser
         self.logger.info("Switch \'{0}\' connected.".format(datapath_id))
 
+
+        mod = parser.OFPFlowMod(datapath=datapath, table_id=ofproto.OFPTT_ALL,
+                                command=ofproto.OFPFC_DELETE, priority=0,
+                                match=parser.OFPMatch(), out_port=ofproto.OFPP_ANY, 
+                                out_group=ofproto.OFPG_ANY,
+                                cookie=0, cookie_mask=0,
+                                buffer_id=0xffffffff)
+
+        datapath.send_msg(mod)
+
+        self.logger.info("Switch \'{0}\' all tables cleared.".format(datapath_id)
+)
         for app in self._handlers[self._EVENT_OFP_SW_FEATURES]:
             self._apps[app].switch_features(event)
 
@@ -195,7 +235,8 @@ class Controller(app_manager.RyuApp):
         match = msg.match
         self.logger.info("Flow table entry removed.\n\t Flow match: {"
                          "0}".format(match))
-
+        self.logger.info("Cookie: %x", msg.cookie)
+                         
     @set_ev_cls(ofp_event.EventOFPPacketIn, MAIN_DISPATCHER)
     def _packet_in_handler(self, event):
         """Catch and handle OpenFlow Protocol PacketIn events.
@@ -210,3 +251,20 @@ class Controller(app_manager.RyuApp):
                                                event.msg.total_len))
         for app in self._handlers[self._EVENT_OFP_PACKET_IN]:
             self._apps[app].packet_in(event)
+            
+    @set_ev_cls(ofp_event.EventOFPErrorMsg, [HANDSHAKE_DISPATCHER, CONFIG_DISPATCHER, MAIN_DISPATCHER])
+    def error_msg_handler(self, ev):
+        msg = ev.msg
+
+        self.logger.warning('OFPErrorMsg received: type=0x%02x code=0x%02x '
+                          'message=%s',
+                          msg.type, msg.code, msg.data)
+   
+   
+    @set_ev_cls(ofp_event.EventOFPTableFeaturesStatsReply, MAIN_DISPATCHER)
+    def h(self, ev):
+        print "table features stats reply"
+        print ev.msg
+    
+    
+    

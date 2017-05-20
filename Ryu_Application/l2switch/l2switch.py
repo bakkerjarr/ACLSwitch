@@ -62,7 +62,7 @@ class L2Switch(ABCRyuApp):
         self._table_id_l2 = 2
         self.mac_to_port = {}
         self._supported = self._verify_contr_handlers()
-
+            
     def packet_in(self, event):
         """Process a packet-in event from the controller.
 
@@ -73,6 +73,11 @@ class L2Switch(ABCRyuApp):
         ofproto = datapath.ofproto
         parser = datapath.ofproto_parser
         in_port = msg.match['in_port']
+        
+        if msg.table_id != self._table_id_l2:
+	    #print "l2switch packet " + str( packet.Packet(msg.data))
+            print "l2switch not dealing with packet in messages from other tables. table id: " + str(msg.table_id)
+            return
 
         pkt = packet.Packet(msg.data)
         eth_head = pkt.get_protocols(ethernet.ethernet)[0]
@@ -105,7 +110,7 @@ class L2Switch(ABCRyuApp):
             match = parser.OFPMatch(in_port=in_port, eth_dst=eth_dst)
 
             print("{0}: New flow\t-\t{1}".format(self._APP_NAME, pkt))
-            priority = ofproto_v1_3.OFP_DEFAULT_PRIORITY
+            priority = 1000# ofproto_v1_3.OFP_DEFAULT_PRIORITY
 
             # verify if we have a valid buffer_id, if yes avoid to send
             # both flow_mod & packet_out
@@ -127,6 +132,7 @@ class L2Switch(ABCRyuApp):
                                   in_port=in_port, actions=actions,
                                   data=data)
         self._contr.packet_out(datapath, out)
+	print "l2switch packet out src: eth_src " + eth_src + ". eth_dst " + eth_dst
 
     def switch_features(self, event):
         """Process a switch features event from the controller.
@@ -148,7 +154,7 @@ class L2Switch(ABCRyuApp):
                                           ofproto.OFPCML_NO_BUFFER)]
         inst = [parser.OFPInstructionActions(
             ofproto.OFPIT_APPLY_ACTIONS, actions)]
-        self._contr.add_flow(datapath, 0, match, inst, 0,
+        self._contr.add_flow(datapath, 1, match, inst, 0,
                              self._table_id_l2)
 
     def get_app_name(self):
