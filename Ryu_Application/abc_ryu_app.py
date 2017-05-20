@@ -19,14 +19,14 @@ __author__ = "Jarrod N. Bakker"
 __status__ = "Development"
 
 
-class ABCRyuApp:
+class ABCRyuApp():
     """Interface for Ryu applications.
     """
 
     __metaclass__ = ABCMeta
 
     @abstractmethod
-    def __init__(self, contr):
+    def __init__(self):
         """Initialise the L2Switch application.
 
         :param contr: The controller abstraction.
