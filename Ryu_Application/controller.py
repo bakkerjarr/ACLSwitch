@@ -97,7 +97,8 @@ class Controller(dpset.DPSet):
     # Methods that send data to OpenFlow switches
 
     def add_flow(self, datapath, priority, match, inst, hard_timeout,
-                  table_id, buffer_id=None, in_port=None, msg=None, idle_timeout=0, packet_out=True, cookie=0):
+                 table_id, buffer_id=None, in_port=None, msg=None,
+                 idle_timeout=0, packet_out=True, cookie=0):
         """Reactively add a flow table entry to a switch's flow table.
 
         :param datapath: The switch to add the flow-table entry to.
@@ -109,6 +110,11 @@ class Controller(dpset.DPSet):
         be sent to.
         :param buffer_id: Identifier of buffer queue if traffic is
         being buffered.
+        :param in_port: Ingress switch port.
+        :param msg: OpenFlow message.
+        :param idle_timeout: Idle time before the flow is removed.
+        :param packet_out: True if this is a packet_out, False otherwise.
+        :param cookie: Cookie for the message.
         """
         ofproto = datapath.ofproto
         parser = datapath.ofproto_parser
@@ -233,8 +239,8 @@ class Controller(dpset.DPSet):
         """
         msg = event.msg
         match = msg.match
-        self.logger.info("Flow table entry removed.\n\t Flow match: {"
-                         "0}".format(match))
+        self.logger.info("Flow table entry removed.\n\t Flow match: "
+                         "{0}".format(match))
         self.logger.info("Cookie: %x", msg.cookie)
                          
     @set_ev_cls(ofp_event.EventOFPPacketIn, MAIN_DISPATCHER)
@@ -263,8 +269,4 @@ class Controller(dpset.DPSet):
    
     @set_ev_cls(ofp_event.EventOFPTableFeaturesStatsReply, MAIN_DISPATCHER)
     def h(self, ev):
-        print "table features stats reply"
-        print ev.msg
-    
-    
-    
+        self.logger.info("TableFeaturesStats reply: {0}".format(ev.msg))

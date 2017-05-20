@@ -75,8 +75,8 @@ class L2Switch(ABCRyuApp):
         in_port = msg.match['in_port']
         
         if msg.table_id != self._table_id_l2:
-	    #print "l2switch packet " + str( packet.Packet(msg.data))
-            print "l2switch not dealing with packet in messages from other tables. table id: " + str(msg.table_id)
+            print("l2switch does not process packet-in messages from "
+                  "table: {0}".format(msg.table_id))
             return
 
         pkt = packet.Packet(msg.data)
@@ -132,7 +132,8 @@ class L2Switch(ABCRyuApp):
                                   in_port=in_port, actions=actions,
                                   data=data)
         self._contr.packet_out(datapath, out)
-	print "l2switch packet out src: eth_src " + eth_src + ". eth_dst " + eth_dst
+        print("l2switch packet-out: eth_src: {0}\teth_dst: "
+              "{1}".format(eth_src, eth_dst))
 
     def switch_features(self, event):
         """Process a switch features event from the controller.
