@@ -18,6 +18,6 @@
 #date           :03/04/2017
 #usage          :bash start_network.sh
 #========================================================================
-clear ;
-asw="$(pwd)/Ryu_Application/controller.py";
-ryu-manager --verbose $asw ;
+clear;
+asw="$(pwd)/ryu_application/controller.py";
+ryu-manager --verbose $asw;

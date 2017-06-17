@@ -18,6 +18,6 @@
 #date           :19/01/2016
 #usage          :bash start_cli.sh
 #========================================================================
-cd Command_Line_Interface ;
-clear ;
-python3 ./aclsw_cli.py ;
+clear;
+cli="$(pwd)/cli/aclsw_cli.py";
+python3 $cli;
