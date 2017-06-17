@@ -30,8 +30,9 @@ class ACLRuleSyntax:
     """
 
     # Time is expressed in seconds
-    _MIN_TIME = 1
-    _MAX_TIME = 65535
+    # TODO define the two varibles below in relation to OpenFlow numbers from a module (if it exists?)
+    _MIN_DURATION = 1
+    _MAX_DURATION = 65535
 
     def check_rule(self, rule):
         """Check if an ACL rule has valid syntax.
@@ -180,7 +181,7 @@ class ACLRuleSyntax:
         """
         try:
             i = int(duration)
-            if not self._MIN_TIME < i < self._MAX_TIME:
+            if not self._MIN_DURATION <= i <= self._MAX_DURATION:
                 raise ValueError
         except ValueError:
             return False
