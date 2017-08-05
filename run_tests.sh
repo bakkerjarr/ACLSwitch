@@ -21,4 +21,4 @@
 clear;
 cd tests;
 unit_tests="$(pwd)/run_unit_tests.py";
-python3 -m unittest $unit_tests
+python3 -m unittest -v $unit_tests

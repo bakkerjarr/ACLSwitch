@@ -30,7 +30,6 @@ class ACLRuleSyntax:
     """
 
     # Time is expressed in seconds
-    # TODO define the two varibles below in relation to OpenFlow numbers from a module (if it exists?)
     _MIN_DURATION = 1
     _MAX_DURATION = 65535
 
@@ -87,8 +86,10 @@ class ACLRuleSyntax:
         :param address: The IP address to check.
         :return : True if valid, False if not valid.
         """
+        if isinstance(address, bool) or isinstance(address, type(None)):
+            return False
         try:
-            addr = IPAddress(address)
+            IPAddress(address)
             return True
         except AddrFormatError:
             if address == "*":
@@ -103,8 +104,6 @@ class ACLRuleSyntax:
         :param ip_dst: The destination IP address to check.
         :return: True if valid, False if not valid.
         """
-        if ip_src == "*" and ip_dst == "*":
-            return False
         if ip_src == "*" or ip_dst == "*":
             return True
         return IPAddress(ip_src).version == IPAddress(ip_dst).version
@@ -128,6 +127,8 @@ class ACLRuleSyntax:
         :param port: The port number to check
         :return: True if valid, False if not valid.
         """
+        if isinstance(port, bool) or isinstance(port, type(None)):
+            return False
         try:
             int(port)
             if int(port) < 0 or int(port) > 65535:
@@ -139,9 +140,8 @@ class ACLRuleSyntax:
             return False
 
     def _check_transport_valid(self, tp_proto, port_src, port_dst):
-        """An OFPMatch cannot have both TCP and UDP information in it.
-        Therefore an ACL rule is not valid if the tp_proto is "*" and
-        port numbers are specified.
+        """An ACL rule is not valid if the tp_proto is "*" and port
+        numbers are specified.
 
         :param tp_proto: The transport layer (layer 4) protocol to check
         :param port_src: The source port to check
@@ -166,6 +166,10 @@ class ACLRuleSyntax:
         :param start_time: The time to check.
         :return: True if valid, False if not valid.
         """
+        if (isinstance(start_time, bool) or isinstance(start_time,
+                                                       int) or
+                isinstance(start_time, type(None))):
+            return False
         try:
             datetime.strptime(start_time, "%H:%M")
         except ValueError:
@@ -179,6 +183,9 @@ class ACLRuleSyntax:
         :param duration: Duration to check.
         :return: True if valid, False if not valid.
         """
+        if isinstance(duration, bool) or isinstance(duration,
+                                                    type(None)):
+            return False
         try:
             i = int(duration)
             if not self._MIN_DURATION <= i <= self._MAX_DURATION:
