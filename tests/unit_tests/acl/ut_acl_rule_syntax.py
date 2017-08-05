@@ -158,51 +158,33 @@ class TestACLRuleSyntax(unittest.TestCase):
                 self.assertFalse(self.ars._check_duration(dur))
 
     def test_check_rule_valid(self):
-        rules = [{"ip_src": "10.0.0.1", "ip_dst": "10.0.0.2",
-                  "tp_proto": "*", "port_src": "*", "port_dst": "*",
-                  "policy": "-", "action": "drop", "time_enforce":
-                      ["00:00", 1]},
-                 {"ip_src": "10.0.0.1", "ip_dst": "10.0.0.2",
-                  "tp_proto": "tcp", "port_src": "*", "port_dst": "*",
-                  "policy": "-", "action": "drop", "time_enforce":
-                      ["00:00", 1]},
-                 {"ip_src": "10.0.0.1", "ip_dst": "10.0.0.2",
-                  "tp_proto": "udp", "port_src": "*", "port_dst": "*",
-                  "policy": "-", "action": "drop", "time_enforce":
-                      ["00:00", 1]},
-                 {"ip_src": "10.0.0.4", "ip_dst": "10.0.3.2",
-                  "tp_proto": "tcp", "port_src": "123", "port_dst": "23",
-                  "policy": "-", "action": "allow", "time_enforce":
-                      ["05:20", 4]},
-                 {"ip_src": "1::1", "ip_dst": "34:f4::01",
-                  "tp_proto": "udp", "port_src": "*", "port_dst": "23",
-                  "policy": "-", "action": "allow", "time_enforce":
-                      ["05:20", 4]}]
+        rules = [_create_acl_rule("10.0.0.1", "10.0.0.2", "*", "*",
+                                  "*", "-", "drop", ["00:00", 1]),
+                 _create_acl_rule("10.0.0.1", "10.0.0.2", "tcp", "*",
+                                  "*", "-", "drop", ["00:00", 1]),
+                 _create_acl_rule("10.0.0.1", "10.0.0.2", "udp", "*",
+                                  "*", "-", "drop", ["00:00", 1]),
+                 _create_acl_rule("10.0.0.4", "10.0.3.2", "tcp", "123",
+                                  "23", "-", "allow", ["05:20", 4]),
+                 _create_acl_rule("1::1", "34:f4::01", "udp", "*",
+                                  "23", "-", "allow", ["05:20", 4])]
         for r in rules:
             with self.subTest(rule=r):
                 self.assertListEqual(self.ars.check_rule(r), [])
 
     def test_check_rule_invalid(self):
-        rules = [{"ip_src": "10.0.0.1", "ip_dst": "10.0.0.2",
-                  "tp_proto": "*", "port_src": "2", "port_dst": "3",
-                  "policy": "-", "action": "drop", "time_enforce":
-                      ["00:00", 1]},
-                 {"ip_src": "1:1", "ip_dst": "10.0.0.2",
-                  "tp_proto": "tcp", "port_src": "*", "port_dst": "*",
-                  "policy": "-", "action": "ad", "time_enforce":
-                      ["00:00", 1]},
-                 {"ip_src": "10.0.0.1", "ip_dst": "10.0.0.2",
-                  "tp_proto": "udp", "port_src": "-1", "port_dst": "*",
-                  "policy": "-", "action": "drop", "time_enforce":
-                      ["00:00", 1]},
-                 {"ip_src": "10.0.0.4", "ip_dst": "10.0.3.2",
-                  "tp_proto": "tcp", "port_src": "123", "port_dst": "23",
-                  "policy": "-", "action": "allow", "time_enforce":
-                      ["05:20", "d"]},
-                 {"ip_src": "1::1", "ip_dst": "34:f4::01",
-                  "tp_proto": "icmp", "port_src": "*", "port_dst": "23",
-                  "policy": "-", "action": "allow", "time_enforce":
-                      ["05:20", 4]}]
+        rules = [_create_acl_rule("10.0.0.1", "10.0.0.2", "*", "2",
+                                  "2", "-", "allo", ["00:00", 1]),
+                 _create_acl_rule("10.0.0.1", "10.0.0.2", "tcp", "*",
+                                  "*", "-", "drop", ["25:00", 1]),
+                 _create_acl_rule("10.0.0.1", "10.0.0.2", "udp", "-1",
+                                  "*", "-", "drop", ["00:00", 1]),
+                 _create_acl_rule("10.0.0.4", "10.0.3.2", "tcp", "123",
+                                  "23", "-", "allow", ["05:20", "d"]),
+                 _create_acl_rule("1::1", "34:f4::01", "icmp", "*",
+                                  "*", "-", "allow", ["05:20", 4]),
+                 _create_acl_rule("1::1", "10.0.0.1", "tcp", "*",
+                                  "*", "-", "allow", ["05:20", 4])]
         for r in rules:
             with self.subTest(rule=r):
                 self.assertNotEqual(self.ars.check_rule(r), [])
